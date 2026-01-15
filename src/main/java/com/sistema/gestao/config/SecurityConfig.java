@@ -18,10 +18,10 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                        // AQUI ESTÁ A CORREÇÃO: Adicionei "/img/**"
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/img/**", "/webjars/**").permitAll()
                         .requestMatchers("/funcionarios/**").hasRole("ADMIN")
                         .requestMatchers("/frequencia/**").hasAnyRole("ADMIN", "PROFESSOR")
-                        // REMOVIDO: Regra do Financeiro
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
