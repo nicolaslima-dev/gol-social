@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: cabecalho}"></head>
+<body>
+
+<style>
+    /* Cor do texto das abas inativas */
+    .nav-tabs .nav-link {
+        color: #6c757d;
+        font-weight: 500;
+    }
+
+    /* Cor da aba quando o mouse passa por cima */
+    .nav-tabs .nav-link:hover {
+        color: var(--cor-principal);
+        border-color: transparent transparent #ddd;
+    }
+
+    /* Estilo da aba ATIVA (Selecionada) */
+    .nav-tabs .nav-link.active {
+        color: var(--cor-principal) !important;
+        border-color: #dee2e6 #dee2e6 #fff; /* Borda padrão do bootstrap */
+        border-top: 3px solid var(--cor-principal); /* Detalhe roxo no topo */
+        font-weight: bold;
+    }
+
+    /* Ícones dentro das abas */
+    .nav-tabs i {
+        margin-right: 5px;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{layout :: menu-lateral}"></div>
+
+        <main class="col-md-10 ms-sm-auto px-md-4 py-4 bg-light" style="min-height: 100vh;">
+
+            <h2 class="mb-4" style="color: var(--cor-principal);">
+                <i class="bi bi-gear-fill"></i> Configurações do Sistema
+            </h2>
+
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="usuarios-tab" data-bs-toggle="tab" data-bs-target="#usuarios" type="button" role="tab">
+                        <i class="bi bi-people"></i> Gestão de Acessos
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="instituicao-tab" data-bs-toggle="tab" data-bs-target="#instituicao" type="button" role="tab">
+                        <i class="bi bi-building"></i> Dados da Instituição
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="backup-tab" data-bs-toggle="tab" data-bs-target="#backup" type="button" role="tab">
+                        <i class="bi bi-database-down"></i> Backup
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content p-4 bg-white border border-top-0 shadow-sm rounded-bottom" id="myTabContent">
+
+                <div class="tab-pane fade show active" id="usuarios" role="tabpanel">
+                    <div class="row">
+                        <div class="col-md-4 border-end">
+                            <h5 class="mb-3" style="color: var(--cor-principal);">Novo Utilizador</h5>
+                            <form action="/usuarios/criar" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label">Login</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                        <input type="text" name="login" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Senha</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-key"></i></span>
+                                        <input type="password" name="senha" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Perfil</label>
+                                    <select name="perfil" class="form-select">
+                                        <option value="PROFESSOR">Professor</option>
+                                        <option value="ADMIN">Administrador</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-person-plus-fill"></i> Criar Acesso
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="col-md-8 ps-4">
+                            <h5 class="mb-3" style="color: var(--cor-principal);">Utilizadores Ativos</h5>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle border">
+                                    <thead class="text-white" style="background-color: var(--cor-principal);">
+                                    <tr>
+                                        <th>Login</th>
+                                        <th>Perfil</th>
+                                        <th class="text-center">Ações</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="u : ${usuarios}">
+                                        <td th:text="${u.login}" class="fw-bold"></td>
+                                        <td>
+                                            <span th:class="${u.perfil == 'ADMIN' ? 'badge bg-dark' : 'badge bg-secondary'}"
+                                                  th:text="${u.perfil}"></span>
+                                        </td>
+                                        <td class="text-center">
+                                            <a th:if="${u.id != 1}" th:href="@{/usuarios/excluir/{id}(id=${u.id})}"
+                                               class="btn btn-sm btn-outline-danger" title="Excluir">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="instituicao" role="tabpanel">
+                    <div class="alert alert-light border border-info d-flex align-items-center" role="alert">
+                        <i class="bi bi-info-circle-fill text-info me-2 fs-4"></i>
+                        <div>
+                            Estes dados aparecerão no <strong>cabeçalho e rodapé</strong> dos relatórios PDF gerados pelo sistema.
+                        </div>
+                    </div>
+
+                    <form th:action="@{/instituicao/salvar}" th:object="${instituicao}" method="post">
+                        <input type="hidden" th:field="*{id}">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nome do Projeto (Título do PDF)</label>
+                            <input type="text" th:field="*{nomeProjeto}" class="form-control" placeholder="Ex: PROJETO GOL SOCIAL" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Endereço Completo (Rodapé)</label>
+                            <input type="text" th:field="*{enderecoCompleto}" class="form-control" placeholder="Rua, Número, Bairro, Cidade - CEP" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Telefone de Contato</label>
+                                <input type="text" th:field="*{telefone}" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">E-mail Institucional</label>
+                                <input type="email" th:field="*{email}" class="form-control">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Salvar Alterações
+                        </button>
+                    </form>
+                </div>
+
+                <div class="tab-pane fade" id="backup" role="tabpanel">
+                    <div class="text-center py-5">
+                        <i class="bi bi-cloud-download" style="font-size: 4rem; color: var(--cor-destaque);"></i>
+                        <h5 class="mt-3 text-secondary">Exportar Dados</h5>
+                        <p class="text-muted">Faça o download de todos os dados do sistema em formato CSV.</p>
+                        <button class="btn btn-primary mt-2" disabled>
+                            <i class="bi bi-file-earmark-spreadsheet"></i> Baixar CSV (Em Breve)
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: cabecalho}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{layout :: menu-lateral}"></div>
+
+        <main class="col-md-10 ms-sm-auto px-md-4 py-4 bg-light" style="min-height: 100vh;">
+
+            <h2 class="mb-4" style="color: var(--cor-principal);">
+                <i class="bi bi-speedometer2"></i> Visão Geral
+            </h2>
+
+            <div class="row mb-4">
+
+                <div class="col-md-6">
+                    <div class="card mb-3 shadow-sm border-0"
+                         style="background-color: var(--cor-principal); color: white;">
+                        <div class="card-body">
+                            <h5 class="card-title text-white-50"><i class="bi bi-people"></i> Beneficiários</h5>
+                            <p class="card-text display-4 fw-bold" th:text="${totalInscritos}">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card mb-3 shadow-sm border-0"
+                         style="background-color: var(--cor-destaque); color: #3e2723;"> <div class="card-body">
+                        <h5 class="card-title" style="opacity: 0.8;"><i class="bi bi-journal-check"></i> Aulas Realizadas</h5>
+                        <p class="card-text display-4 fw-bold" th:text="${aulasMes}">0</p>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card shadow-sm mb-4 border-0">
+                        <div class="card-header bg-white py-3 border-bottom-0">
+                            <h5 class="m-0 font-weight-bold" style="color: var(--cor-principal);">
+                                <i class="bi bi-bar-chart-fill"></i> Crescimento de Inscrições
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="meuGrafico" style="max-height: 300px;"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header text-white py-3" style="background-color: #dc3545;">
+                            <h5 class="m-0"><i class="bi bi-bell-fill"></i> Alertas Recentes</h5>
+                        </div>
+
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between align-items-center"
+                                th:each="alerta : ${listaAlertas}">
+                                <span th:text="${alerta.nome}" class="fw-bold text-secondary">Nome Aluno</span>
+                                <span class="badge rounded-pill"
+                                      th:classappend="${alerta.tipo == 'danger' ? 'bg-danger' : 'bg-warning text-dark'}"
+                                      th:text="${alerta.motivo}">Motivo</span>
+                            </li>
+                            <li class="list-group-item text-center text-muted py-4" th:if="${#lists.isEmpty(listaAlertas)}">
+                                <i class="bi bi-check-circle-fill" style="font-size: 2rem; color: var(--cor-principal);"></i><br>
+                                <span class="small">Nenhuma pendência encontrada.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+    var mesesDoJava = /*[[${graficoMeses}]]*/ [];
+    var dadosDoJava = /*[[${graficoDados}]]*/ [];
+
+    // Conversão da cor HEX #5F1B58 para RGB (95, 27, 88) para usar no gráfico
+    var corBorda = 'rgba(95, 27, 88, 1)';
+    var corFundo = 'rgba(95, 27, 88, 0.1)'; // 10% de opacidade
+
+    var ctx = document.getElementById('meuGrafico').getContext('2d');
+    var chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: mesesDoJava,
+            datasets: [{
+                label: 'Total Acumulado',
+                data: dadosDoJava,
+                backgroundColor: corFundo,  // Fundo Roxo Claro
+                borderColor: corBorda,      // Linha Roxa Forte
+                borderWidth: 3,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: corBorda,
+                pointHoverBackgroundColor: corBorda,
+                pointHoverBorderColor: '#fff',
+                fill: true,
+                tension: 0.3 // Curva suave
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false // Esconde a legenda para limpar o visual
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f0f0f0' }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

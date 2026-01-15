@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: cabecalho}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{layout :: menu-lateral}"></div>
+
+        <main class="col-md-10 ms-sm-auto px-md-4 py-4 bg-light" style="min-height: 100vh;">
+
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-header text-white py-3" style="background-color: var(--cor-principal);">
+                    <h5 class="m-0"><i class="bi bi-person-lines-fill"></i> Ficha de Inscrição</h5>
+                </div>
+
+                <div class="card-body p-4">
+                    <form th:action="@{/inscritos/salvar}" th:object="${inscrito}" method="post">
+                        <input type="hidden" th:field="*{id}">
+
+                        <h6 class="text-secondary border-bottom pb-2 mb-4 fw-bold">
+                            <i class="bi bi-person-circle"></i> Dados do Aluno
+                        </h6>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Nome Completo do Aluno *</label>
+                                <input type="text" th:field="*{nomeCompleto}" class="form-control" required placeholder="Nome completo da criança/adolescente">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">CPF do Aluno</label>
+                                <input type="text" th:field="*{cpf}" class="form-control" placeholder="000.000.000-00">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Sexo</label>
+                                <select th:field="*{sexo}" class="form-select">
+                                    <option value="Masculino">Masculino</option>
+                                    <option value="Feminino">Feminino</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Data de Nascimento *</label>
+                                <input type="date" th:field="*{dataNascimento}" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <h6 class="text-secondary border-bottom pb-2 mb-4 mt-4 fw-bold">
+                            <i class="bi bi-geo-alt-fill"></i> Endereço
+                        </h6>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Endereço Completo *</label>
+                                <input type="text" th:field="*{endereco}" class="form-control" required placeholder="Rua, Número, Complemento">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Bairro *</label>
+                                <input type="text" th:field="*{bairro}" class="form-control" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Cidade *</label>
+                                <input type="text" th:field="*{cidade}" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <h6 class="text-secondary border-bottom pb-2 mb-4 mt-4 fw-bold">
+                            <i class="bi bi-people-fill"></i> Responsável Legal
+                        </h6>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Nome do Responsável *</label>
+                                <input type="text" th:field="*{nomeResponsavel}" class="form-control" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">CPF do Responsável</label>
+                                <input type="text" th:field="*{cpfResponsavel}" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Telefone de Contato *</label>
+                                <input type="text" th:field="*{telefone}" class="form-control" required placeholder="(XX) 9XXXX-XXXX">
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">E-mail do Responsável</label>
+                            <input type="email" th:field="*{email}" class="form-control" placeholder="exemplo@email.com">
+                        </div>
+
+                        <h6 class="text-secondary border-bottom pb-2 mb-4 mt-4 fw-bold">
+                            <i class="bi bi-ui-checks"></i> Dados da Matrícula
+                        </h6>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Modalidade *</label>
+                                <select th:field="*{modalidade}" class="form-select" required>
+                                    <option value="Ginástica">Ginástica</option>
+                                    <option value="Dança">Dança</option>
+                                    <option value="Futsal">Futsal</option>
+                                    <option value="Vôlei">Vôlei</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Horário</label>
+                                <select th:field="*{horario}" class="form-select">
+                                    <option value="Manhã">Manhã</option>
+                                    <option value="Tarde">Tarde</option>
+                                    <option value="Noite">Noite</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Unidade do Polo *</label>
+                                <select th:field="*{polo}" class="form-select" required>
+                                    <option th:each="i : ${#numbers.sequence(1, 10)}"
+                                            th:value="'Polo ' + ${i}"
+                                            th:text="'Polo ' + ${i}"></option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 p-3 bg-light border rounded">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" th:field="*{fichaAnexada}" id="checkFicha" style="cursor: pointer;">
+                                <label class="form-check-label fw-bold" for="checkFicha" style="cursor: pointer;">
+                                    <i class="bi bi-paperclip"></i> A ficha de inscrição presencial física foi escaneada e arquivada?
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Observações Gerais</label>
+                            <textarea th:field="*{observacoes}" class="form-control" rows="2" placeholder="Alguma condição de saúde, alergia ou observação importante?"></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end border-top pt-3">
+                            <a href="/inscritos" class="btn btn-outline-secondary me-md-2">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg px-4">
+                                <i class="bi bi-save"></i> Salvar Inscrição
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+</body>
+</html>

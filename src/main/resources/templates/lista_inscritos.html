@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: cabecalho}"></head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{layout :: menu-lateral}"></div>
+
+        <main class="col-md-10 ms-sm-auto px-md-4 py-4 bg-light" style="min-height: 100vh;">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 style="color: var(--cor-principal);">
+                    <i class="bi bi-people-fill"></i> Beneficiários
+                </h2>
+                <a th:href="@{/inscritos/novo}" class="btn btn-primary shadow-sm">
+                    <i class="bi bi-person-plus-fill"></i> Nova Inscrição
+                </a>
+            </div>
+
+            <div class="alert alert-info" th:if="${#lists.isEmpty(lista)}">
+                <i class="bi bi-info-circle"></i> Nenhum beneficiário cadastrado.
+            </div>
+
+            <div class="card shadow-sm border-0" th:unless="${#lists.isEmpty(lista)}">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle mb-0">
+                            <thead class="text-white" style="background-color: var(--cor-principal);">
+                            <tr>
+                                <th class="ps-3">Nome</th>
+                                <th>CPF</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end pe-4">Ações</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="item : ${lista}">
+                                <td class="ps-3 fw-bold" th:text="${item.nomeCompleto}"></td>
+                                <td th:text="${item.cpf}"></td>
+                                <td class="text-center">
+                                    <span th:if="${item.ativo}" class="badge rounded-pill bg-success">
+                                        <i class="bi bi-check-circle"></i> Ativo
+                                    </span>
+                                    <span th:unless="${item.ativo}" class="badge rounded-pill bg-secondary">
+                                        <i class="bi bi-x-circle"></i> Inativo
+                                    </span>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <a th:href="@{/inscritos/pdf/{id}(id=${item.id})}"
+                                       class="btn btn-sm btn-outline-danger me-1"
+                                       title="Baixar Ficha PDF" target="_blank">
+                                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                                    </a>
+
+                                    <a th:href="@{/inscritos/editar/{id}(id=${item.id})}"
+                                       class="btn btn-sm btn-outline-warning text-dark me-1"
+                                       title="Editar Cadastro">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+
+                                    <a th:href="@{/inscritos/excluir/{id}(id=${item.id})}"
+                                       class="btn btn-sm btn-outline-danger"
+                                       onclick="return confirm('Tem certeza que deseja excluir este beneficiário?')"
+                                       title="Excluir">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script th:if="${erro}" th:inline="javascript">
+    var mensagem = /*[[${erro}]]*/ 'Erro desconhecido';
+    alert(mensagem);
+</script>
+
+</body>
+</html>

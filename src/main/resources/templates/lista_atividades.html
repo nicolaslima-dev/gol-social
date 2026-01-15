@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: cabecalho}"></head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{layout :: menu-lateral}"></div>
+
+        <main class="col-md-10 ms-sm-auto px-md-4 py-4 bg-light" style="min-height: 100vh;">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 style="color: var(--cor-principal);">
+                    <i class="bi bi-journal-bookmark-fill"></i> Diário de Aulas
+                </h2>
+                <a th:href="@{/atividades/nova}" class="btn btn-primary shadow-sm">
+                    <i class="bi bi-plus-lg"></i> Novo Relatório
+                </a>
+            </div>
+
+            <div class="row">
+                <div class="col-12 text-center mt-5" th:if="${#lists.isEmpty(lista)}">
+                    <p class="text-muted fs-4">Nenhuma aula registrada ainda.</p>
+                </div>
+
+                <div class="col-md-6 mb-4" th:each="item : ${lista}">
+                    <div class="card shadow-sm h-100 border-0">
+
+                        <div class="card-header d-flex justify-content-between align-items-center py-3"
+                             th:classappend="${item.ocorrencias != null && !item.ocorrencias.isEmpty()} ? 'bg-warning text-dark' : 'text-white'"
+                             th:style="${item.ocorrencias == null || item.ocorrencias.isEmpty()} ? 'background-color: var(--cor-principal);' : ''">
+
+                            <span class="fw-bold fs-5">
+                                <i class="bi bi-calendar-check me-2"></i>
+                                <span th:text="${#temporals.format(item.data, 'dd/MM/yyyy')}"></span>
+                                <small class="ms-2 opacity-75" style="font-size: 0.8em;">
+                                    | <i class="bi bi-people-fill"></i> <span th:text="${item.turma}"></span>
+                                </small>
+                            </span>
+
+                            <a th:href="@{/atividades/excluir/{id}(id=${item.id})}"
+                               th:class="${item.ocorrencias != null && !item.ocorrencias.isEmpty()} ? 'text-danger' : 'text-white'"
+                               class="btn btn-sm btn-link text-decoration-none"
+                               onclick="return confirm('Tem certeza que deseja apagar este relatório?')"
+                               title="Excluir Registro">
+                                <i class="bi bi-trash-fill fs-5"></i>
+                            </a>
+                        </div>
+
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 fw-bold" style="color: var(--cor-principal);">
+                                Atividades Realizadas:
+                            </h6>
+                            <p class="card-text text-secondary" th:text="${item.descricaoAtividade}"></p>
+
+                            <div th:if="${item.ocorrencias != null && !item.ocorrencias.isEmpty()}"
+                                 class="alert alert-danger p-2 mt-3 border-danger d-flex align-items-start">
+                                <i class="bi bi-exclamation-triangle-fill me-2 mt-1"></i>
+                                <div>
+                                    <strong>Ocorrências:</strong><br>
+                                    <span th:text="${item.ocorrencias}"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+</body>
+</html>

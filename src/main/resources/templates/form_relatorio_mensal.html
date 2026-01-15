@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: cabecalho}"></head>
+<body>
+
+<style>
+    .form-check-input:checked {
+        background-color: var(--cor-principal);
+        border-color: var(--cor-principal);
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div th:replace="~{layout :: menu-lateral}"></div>
+
+        <main class="col-md-10 ms-sm-auto px-md-4 py-4 bg-light" style="min-height: 100vh;">
+
+            <div class="card shadow-sm border-0 mt-4">
+                <div class="card-header text-white py-3" style="background-color: var(--cor-principal);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="m-0"><i class="bi bi-file-earmark-pdf-fill"></i> Preencher Relatório Mensal</h5>
+                        <span class="badge bg-warning text-dark">
+                            <i class="bi bi-person-fill"></i> <span th:text="${relatorio.funcionario.nomeCompleto}">Instrutor</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <form th:action="@{/relatorios/salvar}" th:object="${relatorio}" method="post" target="_blank">
+                        <input type="hidden" th:field="*{funcionario.id}">
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Curso / Atividade</label>
+                            <input type="text" th:field="*{curso}" class="form-control form-control-lg"
+                                   placeholder="Ex: Dança, Ginástica Localizada, Futsal..." required>
+                        </div>
+
+                        <div class="mb-4 p-3 bg-white rounded border">
+                            <label class="form-label fw-bold mb-3 d-block text-secondary">
+                                <i class="bi bi-geo-alt-fill"></i> Selecione o Polo/Núcleo:
+                            </label>
+                            <div class="row">
+                                <div class="col-md-3 mb-2" th:each="i : ${#numbers.sequence(1, 10)}">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" th:field="*{polo}"
+                                               th:value="'Polo ' + ${i}" th:id="'polo' + ${i}" required>
+                                        <label class="form-check-label" th:for="'polo' + ${i}">
+                                            Polo <span th:text="${i}"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Descrição das Atividades / Observações</label>
+
+                            <textarea class="form-control" name="descricao" id="descInput" rows="6" maxlength="1300"
+                                      placeholder="Descreva aqui as atividades realizadas no período... (Máximo 1300 caracteres)"
+                                      oninput="atualizarContador(this)"></textarea>
+
+                            <div class="text-end text-muted small mt-1">
+                                <span id="charCount">0</span> / 1300 caracteres
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Cidade</label>
+                                <input type="text" th:field="*{cidade}" class="form-control" value="Rio de Janeiro">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Data Início</label>
+                                <input type="date" th:field="*{dataInicio}" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Data Fim</label>
+                                <input type="date" th:field="*{dataFim}" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end border-top pt-3">
+                            <a href="/funcionarios" class="btn btn-outline-secondary me-md-2">
+                                <i class="bi bi-arrow-left"></i> Voltar
+                            </a>
+                            <button type="submit" class="btn btn-primary px-4 btn-lg shadow-sm">
+                                <i class="bi bi-printer"></i> Salvar e Gerar PDF
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script>
+    function atualizarContador(campo) {
+        var atual = campo.value.length;
+        var max = 1300;
+        document.getElementById('charCount').innerText = atual;
+
+        // Muda a cor para vermelho se estiver chegando perto do fim
+        if (atual > 1200) {
+            document.getElementById('charCount').classList.add('text-danger');
+            document.getElementById('charCount').style.fontWeight = "bold";
+        } else {
+            document.getElementById('charCount').classList.remove('text-danger');
+            document.getElementById('charCount').style.fontWeight = "normal";
+        }
+    }
+</script>
+
+</body>
+</html>
