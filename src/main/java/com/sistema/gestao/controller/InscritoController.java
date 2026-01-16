@@ -4,11 +4,13 @@ import com.sistema.gestao.entity.Inscrito;
 import com.sistema.gestao.repository.InscritoRepository;
 import com.sistema.gestao.service.PdfService;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication; // Importante
-import org.springframework.security.core.context.SecurityContextHolder; // Importante
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -40,22 +42,20 @@ public class InscritoController {
     }
 
     @PostMapping("/inscritos/salvar")
-    public String salvar(@ModelAttribute Inscrito inscrito) {
-        // --- LÓGICA AUTOMÁTICA ---
-        // 1. Pega o usuário logado agora
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String usuarioLogado = auth.getName();
+    public String salvar(@Valid @ModelAttribute Inscrito inscrito, BindingResult result) {
 
-        // 2. Se for novo cadastro, define data e autor
+        if (result.hasErrors()) {
+            return "formulario";
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String usuarioLogado = (auth != null) ? auth.getName() : "Sistema";
+
         if (inscrito.getId() == null) {
             inscrito.setDataPreenchimento(LocalDate.now());
-            inscrito.setLancadoPor(usuarioLogado);
-        } else {
-            // Se for edição, mantemos o autor original mas atualizamos a data se quiser,
-            // ou recuperamos do banco. Para simplificar, vamos manter o autor antigo se possível.
-            // (Neste código simples, ele vai sobrescrever com o usuário atual que está editando)
-            inscrito.setLancadoPor(usuarioLogado);
         }
+
+        inscrito.setLancadoPor(usuarioLogado);
 
         repository.save(inscrito);
         return "redirect:/inscritos";
@@ -93,7 +93,7 @@ public class InscritoController {
         try {
             repository.deleteById(id);
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("erro", "Não é possível excluir. O beneficiário possui registros de frequência.");
+            redirectAttributes.addFlashAttribute("erro", "Não é possível excluir. O beneficiário possui registros vinculados.");
         }
         return "redirect:/inscritos";
     }

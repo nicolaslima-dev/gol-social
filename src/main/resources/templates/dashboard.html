@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout :: cabecalho}"></head>
+
+<style>
+    /* Essa classe segura a altura do gráfico para ele não sumir no celular */
+    .grafico-container {
+        position: relative;
+        width: 100%;
+        height: 300px;      /* Altura fixa ideal */
+        min-height: 300px;  /* Segurança para não diminuir */
+    }
+</style>
+
 <body>
 
 <div class="container-fluid">
@@ -44,7 +55,9 @@
                             </h5>
                         </div>
                         <div class="card-body">
-                            <canvas id="meuGrafico" style="max-height: 300px;"></canvas>
+                            <div class="grafico-container">
+                                <canvas id="meuGrafico"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -105,6 +118,10 @@
         },
         options: {
             responsive: true,
+
+            // MUDANÇA AQUI: Isso permite que o gráfico se adapte à div container
+            maintainAspectRatio: false,
+
             plugins: {
                 legend: {
                     display: false // Esconde a legenda para limpar o visual

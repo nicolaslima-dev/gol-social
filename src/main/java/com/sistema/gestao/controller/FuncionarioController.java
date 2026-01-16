@@ -9,15 +9,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes; // <--- IMPORTANTE: Adicione esta linha
 
 @Controller
 public class FuncionarioController {
 
     @Autowired
     private FuncionarioRepository repository;
-
-    // Nota: Removemos a injeção do PdfService aqui, pois a impressão
-    // agora é feita pelo RelatorioMensalController.
 
     @GetMapping("/funcionarios")
     public String listar(Model model) {
@@ -44,12 +42,28 @@ public class FuncionarioController {
         return "form_funcionario";
     }
 
+    // --- MÉTODO EXCLUIR ATUALIZADO ---
     @GetMapping("/funcionarios/excluir/{id}")
     public String excluir(@PathVariable Long id) {
-        repository.deleteById(id);
+        Funcionario funcionario = repository.findById(id).orElse(null);
+
+        if (funcionario != null) {
+            funcionario.setAtivo(false); // Apenas desativa
+            repository.save(funcionario); // Atualiza no banco
+        }
+
         return "redirect:/funcionarios";
     }
 
-    // REMOVIDO: O método gerarRelatorio antigo que causava o erro.
-    // Agora o botão na tela aponta para /relatorios/novo/{id}
+    @GetMapping("/funcionarios/ativar/{id}")
+    public String ativar(@PathVariable Long id) {
+        Funcionario funcionario = repository.findById(id).orElse(null);
+
+        if (funcionario != null) {
+            funcionario.setAtivo(true); // Muda para ATIVO
+            repository.save(funcionario);
+        }
+
+        return "redirect:/funcionarios";
+    }
 }

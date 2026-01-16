@@ -19,4 +19,13 @@ public class Funcionario {
 
     @Column(columnDefinition = "TEXT")
     private String relatorioDesempenho; // Campo para o texto do relatório
+
+    private boolean ativo = true;
+    public boolean isAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(boolean ativo) {
+        this.ativo = ativo;
+    }
 }

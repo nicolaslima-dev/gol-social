@@ -15,7 +15,9 @@
                 </div>
 
                 <div class="card-body p-4">
+
                     <form th:action="@{/inscritos/salvar}" th:object="${inscrito}" method="post">
+
                         <input type="hidden" th:field="*{id}">
 
                         <h6 class="text-secondary border-bottom pb-2 mb-4 fw-bold">
@@ -32,8 +34,9 @@
                                 <input type="text" th:field="*{cpf}" class="form-control" placeholder="000.000.000-00">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label fw-bold">Sexo</label>
-                                <select th:field="*{sexo}" class="form-select">
+                                <label class="form-label fw-bold">Sexo *</label>
+                                <select th:field="*{sexo}" class="form-select" required>
+                                    <option value="">Selecione...</option>
                                     <option value="Masculino">Masculino</option>
                                     <option value="Feminino">Feminino</option>
                                 </select>
@@ -96,13 +99,9 @@
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Modalidade *</label>
-                                <select th:field="*{modalidade}" class="form-select" required>
-                                    <option value="Ginástica">Ginástica</option>
-                                    <option value="Dança">Dança</option>
-                                    <option value="Futsal">Futsal</option>
-                                    <option value="Vôlei">Vôlei</option>
-                                </select>
+                                <input type="text" th:field="*{modalidade}" class="form-control" placeholder="Digite a modalidade (Ex: Futebol)" required>
                             </div>
+
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Horário</label>
                                 <select th:field="*{horario}" class="form-select">
@@ -135,7 +134,7 @@
                             <textarea th:field="*{observacoes}" class="form-control" rows="2" placeholder="Alguma condição de saúde, alergia ou observação importante?"></textarea>
                         </div>
 
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end border-top pt-3">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end border-top pt-3 mt-4 mb-5">
                             <a href="/inscritos" class="btn btn-outline-secondary me-md-2">
                                 <i class="bi bi-x-circle"></i> Cancelar
                             </a>
@@ -144,6 +143,7 @@
                             </button>
                         </div>
                     </form>
+
                 </div>
             </div>
 
