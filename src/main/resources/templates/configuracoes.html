@@ -12,6 +12,14 @@
         border-top: 3px solid var(--cor-principal);
         font-weight: bold;
     }
+    .card-backup {
+        transition: transform 0.2s;
+        cursor: pointer;
+    }
+    .card-backup:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
 </style>
 
 <div class="container-fluid">
@@ -20,22 +28,26 @@
 
         <main class="col-md-10 ms-sm-auto px-md-4 py-4 bg-light" style="min-height: 100vh;">
 
-            <h2 class="mb-4" style="color: var(--cor-principal);">Configurações</h2>
+            <h2 class="mb-4" style="color: var(--cor-principal);">Configurações do Sistema</h2>
 
             <script>
                 document.addEventListener("DOMContentLoaded", function() {
                     const urlParams = new URLSearchParams(window.location.search);
-                    if (urlParams.get('aba') === 'instituicao') {
-                        var triggerEl = document.querySelector('#instituicao-tab');
-                        var tab = new bootstrap.Tab(triggerEl);
-                        tab.show();
+                    const aba = urlParams.get('aba');
+                    if (aba) {
+                        const triggerEl = document.querySelector('#' + aba + '-tab');
+                        if(triggerEl) {
+                            const tab = new bootstrap.Tab(triggerEl);
+                            tab.show();
+                        }
                     }
                 });
             </script>
 
             <ul class="nav nav-tabs" id="myTab" role="tablist">
-                <li class="nav-item"><button class="nav-link active" id="usuarios-tab" data-bs-toggle="tab" data-bs-target="#usuarios">Usuários</button></li>
-                <li class="nav-item"><button class="nav-link" id="instituicao-tab" data-bs-toggle="tab" data-bs-target="#instituicao">Instituição</button></li>
+                <li class="nav-item"><button class="nav-link active" id="usuarios-tab" data-bs-toggle="tab" data-bs-target="#usuarios">Usuários e Acesso</button></li>
+                <li class="nav-item"><button class="nav-link" id="instituicao-tab" data-bs-toggle="tab" data-bs-target="#instituicao">Dados da Instituição</button></li>
+                <li class="nav-item"><button class="nav-link" id="backup-tab" data-bs-toggle="tab" data-bs-target="#backup"><i class="bi bi-database-down"></i> Backup de Dados</button></li>
             </ul>
 
             <div class="tab-content p-4 bg-white border border-top-0 shadow-sm" id="myTabContent">
@@ -53,7 +65,7 @@
                                         <option value="ADMIN">Administrador</option>
                                     </select>
                                 </div>
-                                <button class="btn btn-primary w-100">Criar</button>
+                                <button class="btn btn-primary w-100">Criar Usuário</button>
                             </form>
                         </div>
                         <div class="col-md-8 ps-4">
@@ -73,11 +85,9 @@
                 </div>
 
                 <div class="tab-pane fade" id="instituicao">
-                    <div class="alert alert-info">Estes dados aparecerão no cabeçalho dos PDFs.</div>
-
+                    <div class="alert alert-info">Estes dados aparecerão no cabeçalho dos PDFs gerados.</div>
                     <form th:action="@{/instituicao/salvar}" th:object="${instituicao}" method="post" enctype="multipart/form-data">
                         <input type="hidden" th:field="*{id}">
-
                         <div class="row">
                             <div class="col-md-8">
                                 <div class="mb-3">
@@ -93,15 +103,58 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="mb-3"><label>Endereço Completo</label><input type="text" th:field="*{enderecoCompleto}" class="form-control" required></div>
                         <div class="row">
                             <div class="col-md-6 mb-3"><label>Telefone</label><input type="text" th:field="*{telefone}" class="form-control"></div>
                             <div class="col-md-6 mb-3"><label>Email</label><input type="email" th:field="*{email}" class="form-control"></div>
                         </div>
-
                         <button class="btn btn-success px-4">Salvar Configurações</button>
                     </form>
+                </div>
+
+                <div class="tab-pane fade" id="backup">
+
+                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                        <div>
+                            <h5 class="text-secondary mb-1">Central de Backup e Exportação</h5>
+                            <small class="text-muted">Gere cópias de segurança dos dados do sistema.</small>
+                        </div>
+                        <a href="/backup/completo" class="btn btn-dark btn-lg shadow-sm">
+                            <i class="bi bi-file-earmark-zip-fill"></i> Baixar Backup Completo (.zip)
+                        </a>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm card-backup">
+                                <div class="card-body text-center">
+                                    <div class="mb-3 text-primary"><i class="bi bi-people-fill" style="font-size: 2.5rem;"></i></div>
+                                    <h6 class="card-title">Apenas Funcionários</h6>
+                                    <a href="/backup/funcionarios" class="btn btn-sm btn-outline-primary w-100 mt-2">Baixar CSV</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm card-backup">
+                                <div class="card-body text-center">
+                                    <div class="mb-3 text-success"><i class="bi bi-mortarboard-fill" style="font-size: 2.5rem;"></i></div>
+                                    <h6 class="card-title">Apenas Alunos</h6>
+                                    <a href="/backup/alunos" class="btn btn-sm btn-outline-success w-100 mt-2">Baixar CSV</a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card h-100 border-0 shadow-sm card-backup">
+                                <div class="card-body text-center">
+                                    <div class="mb-3 text-info"><i class="bi bi-file-earmark-text-fill" style="font-size: 2.5rem;"></i></div>
+                                    <h6 class="card-title">Apenas Relatórios</h6>
+                                    <a href="/backup/relatorios" class="btn btn-sm btn-outline-info w-100 mt-2 text-dark">Baixar CSV</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
             </div>
