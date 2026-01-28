@@ -1,9 +1,6 @@
 package com.sistema.gestao.service;
 
 import com.lowagie.text.*;
-import com.lowagie.text.Font;
-import com.lowagie.text.Image;
-import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
@@ -15,10 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Locale;
 
 @Service
 public class PdfService {
@@ -26,108 +25,125 @@ public class PdfService {
     @Autowired
     private InstituicaoRepository instituicaoRepository;
 
-    private Instituicao getDadosInstituicao() {
-        return instituicaoRepository.findById(1L).orElseGet(() -> {
-            Instituicao inst = new Instituicao();
-            inst.setNomeProjeto("PROJETO GOL SOCIAL");
-            inst.setEnderecoCompleto("Rua Exemplo, 123 - Rio de Janeiro - RJ");
-            return inst;
-        });
-    }
+    private static final Color COR_CINZA_ESCURO = Color.DARK_GRAY;
 
     // =================================================================================
-    // TIPO 1: FICHA DE INSCRIÇÃO
+    // 1. FICHA DE INSCRIÇÃO (CÓDIGO ORIGINAL RESTAURADO)
     // =================================================================================
-
     public byte[] gerarFichaInscricao(Inscrito inscrito) {
-        Document document = new Document(PageSize.A4, 40, 40, 40, 40);
+        Document document = new Document(PageSize.A4, 36, 36, 36, 36);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try {
-            PdfWriter.getInstance(document, out);
+            PdfWriter writer = PdfWriter.getInstance(document, out);
             document.open();
 
-            // ==============================================================================
-            // 1. AQUI É FEITA A CHAMADA DO MÉTODO QUE VOCÊ JÁ CRIOU E TESTOU
-            // ==============================================================================
+            // LOGO
             adicionarLogo(document);
-            // ==============================================================================
 
-            document.add(new Paragraph("\n"));
+            Font fontTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16, COR_CINZA_ESCURO);
+            Font fontSecao = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.WHITE);
+            Font fontLabel = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Color.DARK_GRAY);
+            Font fontDados = FontFactory.getFont(FontFactory.HELVETICA, 10, Color.BLACK);
 
-            // Continuação normal do documento (Título)
-            Font fTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20);
-            Paragraph titulo = new Paragraph("FICHA DE INSCRIÇÃO", fTitulo);
+            // TÍTULO
+            Paragraph titulo = new Paragraph("FICHA DE CADASTRO", fontTitulo);
             titulo.setAlignment(Element.ALIGN_CENTER);
             titulo.setSpacingAfter(20);
             document.add(titulo);
 
-            Font fBold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12);
-            Font fNormal = FontFactory.getFont(FontFactory.HELVETICA, 12);
+            // DADOS PESSOAIS
+            adicionarTituloSecaoFicha(document, "DADOS PESSOAIS DO ALUNO", fontSecao);
+            PdfPTable tabelaPessoal = criarTabelaGrade(new float[]{4f, 2f});
 
-            // DADOS DO ALUNO
-            adicionarTituloSecao(document, "DADOS PESSOAIS DO ALUNO", fBold);
-            PdfPTable table1 = new PdfPTable(2);
-            table1.setWidthPercentage(100);
-            table1.setWidths(new float[]{1.5f, 1f});
-            table1.setSpacingAfter(15);
+            addCelulaGrade(tabelaPessoal, "Nome Completo:", inscrito.getNomeCompleto(), fontLabel, fontDados);
+            addCelulaGrade(tabelaPessoal, "CPF:", inscrito.getCpf(), fontLabel, fontDados);
 
-            adicionarCelula(table1, "Nome Completo:", inscrito.getNomeCompleto(), fBold, fNormal, 2);
-            String cpf = (inscrito.getCpf() != null) ? inscrito.getCpf() : "";
-            adicionarCelula(table1, "CPF:", cpf, fBold, fNormal, 1);
-            adicionarCelula(table1, "Sexo:", inscrito.getSexo(), fBold, fNormal, 1);
-            String nasc = inscrito.getDataNascimento() != null ? inscrito.getDataNascimento().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "";
-            adicionarCelula(table1, "Data de Nascimento:", nasc, fBold, fNormal, 1);
+            String dataNasc = inscrito.getDataNascimento() != null ?
+                    inscrito.getDataNascimento().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) : "";
+            addCelulaGrade(tabelaPessoal, "Data de Nascimento:", dataNasc, fontLabel, fontDados);
+            addCelulaGrade(tabelaPessoal, "Sexo:", inscrito.getSexo(), fontLabel, fontDados);
 
-            String idadeTexto = "";
-            try {
-                if (inscrito.getDataNascimento() != null) {
-                    int anos = java.time.Period.between(inscrito.getDataNascimento(), LocalDate.now()).getYears();
-                    idadeTexto = anos + " anos";
-                }
-            } catch (Exception e) {}
-            adicionarCelula(table1, "Idade:", idadeTexto, fBold, fNormal, 1);
-            document.add(table1);
+            document.add(tabelaPessoal);
+            document.add(new Paragraph(" "));
 
             // ENDEREÇO
-            adicionarTituloSecao(document, "ENDEREÇO E CONTATO", fBold);
-            PdfPTable table2 = new PdfPTable(2); table2.setWidthPercentage(100); table2.setSpacingAfter(15);
-            adicionarCelula(table2, "Endereço:", inscrito.getEndereco(), fBold, fNormal, 2);
-            adicionarCelula(table2, "Bairro:", inscrito.getBairro(), fBold, fNormal, 1);
-            adicionarCelula(table2, "Cidade:", inscrito.getCidade(), fBold, fNormal, 1);
-            document.add(table2);
+            adicionarTituloSecaoFicha(document, "ENDEREÇO E CONTATO", fontSecao);
+            PdfPTable tabelaEnd = criarTabelaGrade(new float[]{4f, 2f});
+            addCelulaGrade(tabelaEnd, "Endereço:", inscrito.getEndereco(), fontLabel, fontDados);
+            addCelulaGrade(tabelaEnd, "Bairro:", inscrito.getBairro(), fontLabel, fontDados);
+            document.add(tabelaEnd);
+
+            PdfPTable tabelaCidade = criarTabelaGrade(new float[]{1f});
+            addCelulaGrade(tabelaCidade, "Cidade:", inscrito.getCidade(), fontLabel, fontDados);
+            document.add(tabelaCidade);
+            document.add(new Paragraph(" "));
 
             // RESPONSÁVEL
-            adicionarTituloSecao(document, "DADOS DO RESPONSÁVEL", fBold);
-            PdfPTable table3 = new PdfPTable(2); table3.setWidthPercentage(100); table3.setSpacingAfter(15);
-            adicionarCelula(table3, "Nome Responsável:", inscrito.getNomeResponsavel(), fBold, fNormal, 2);
-            adicionarCelula(table3, "Telefone:", inscrito.getTelefone(), fBold, fNormal, 1);
-            adicionarCelula(table3, "CPF Resp.:", inscrito.getCpfResponsavel(), fBold, fNormal, 1);
-            adicionarCelula(table3, "E-mail:", inscrito.getEmail(), fBold, fNormal, 2);
-            document.add(table3);
+            adicionarTituloSecaoFicha(document, "DADOS DO RESPONSÁVEL", fontSecao);
+            PdfPTable tabelaResp = criarTabelaGrade(new float[]{3f, 2f});
+            addCelulaGrade(tabelaResp, "Nome Responsável:", inscrito.getNomeResponsavel(), fontLabel, fontDados);
+            addCelulaGrade(tabelaResp, "Telefone:", inscrito.getTelefone(), fontLabel, fontDados);
+            addCelulaGrade(tabelaResp, "CPF Resp.:", inscrito.getCpfResponsavel(), fontLabel, fontDados);
+            addCelulaGrade(tabelaResp, "E-mail:", inscrito.getEmail(), fontLabel, fontDados);
+            document.add(tabelaResp);
+            document.add(new Paragraph(" "));
 
             // MATRÍCULA
-            adicionarTituloSecao(document, "DADOS DA MATRÍCULA", fBold);
-            PdfPTable table4 = new PdfPTable(3); table4.setWidthPercentage(100); table4.setSpacingAfter(15);
-            adicionarCelula(table4, "Modalidade:", "Futebol", fBold, fNormal, 1);
-            adicionarCelula(table4, "Polo:", inscrito.getPolo(), fBold, fNormal, 1);
-            adicionarCelula(table4, "Horário:", inscrito.getHorario(), fBold, fNormal, 1);
-            document.add(table4);
+            adicionarTituloSecaoFicha(document, "DADOS DA MATRÍCULA", fontSecao);
+            PdfPTable tabelaMatricula = criarTabelaGrade(new float[]{1f, 1f, 1f});
 
-            // RODAPÉ FIXO
-            PdfPTable tableAss = new PdfPTable(1);
-            tableAss.setWidthPercentage(100);
-            tableAss.getDefaultCell().setBorder(Rectangle.NO_BORDER);
-            tableAss.getDefaultCell().setHorizontalAlignment(Element.ALIGN_CENTER);
+            String modalidade = "Não informada", polo = "Não informado", horario = "Não informado";
+            if (inscrito.getTurma() != null) {
+                modalidade = inscrito.getTurma().getModalidade();
+                polo = inscrito.getTurma().getNucleo();
+                horario = inscrito.getTurma().getHorario();
+            }
 
-            String dataHoje = LocalDate.now().format(DateTimeFormatter.ofPattern("dd 'de' MMMM 'de' yyyy"));
-            tableAss.addCell(new Paragraph("Rio de Janeiro, " + dataHoje, fNormal));
-            tableAss.addCell(new Paragraph("\n\n\n"));
-            tableAss.addCell(new Paragraph("___________________________________________________", fBold));
-            tableAss.addCell(new Paragraph("Assinatura do Responsável", fBold));
+            addCelulaGrade(tabelaMatricula, "Modalidade:", modalidade, fontLabel, fontDados);
+            addCelulaGrade(tabelaMatricula, "Polo/Núcleo:", polo, fontLabel, fontDados);
+            addCelulaGrade(tabelaMatricula, "Horário:", horario, fontLabel, fontDados);
+            document.add(tabelaMatricula);
 
-            document.add(new Paragraph("\n\n"));
-            document.add(tableAss);
+            // OBSERVAÇÕES
+            if (inscrito.getObservacoes() != null && !inscrito.getObservacoes().isEmpty()) {
+                document.add(new Paragraph(" "));
+                adicionarTituloSecaoFicha(document, "OBSERVAÇÕES", fontSecao);
+                PdfPTable tabelaObs = criarTabelaGrade(new float[]{1f});
+                PdfPCell cellObs = new PdfPCell(new Phrase(inscrito.getObservacoes(), fontDados));
+                cellObs.setPadding(8);
+                cellObs.setBorder(Rectangle.BOX);
+                tabelaObs.addCell(cellObs);
+                document.add(tabelaObs);
+            }
+
+            // RODAPÉ FIXO DA FICHA
+            PdfPTable footerTable = new PdfPTable(1);
+            footerTable.setTotalWidth(523);
+            LocalDate hoje = LocalDate.now();
+            Locale br = new Locale("pt", "BR");
+            String dataExtenso = "Rio de Janeiro, " +
+                    hoje.getDayOfMonth() + " de " +
+                    hoje.getMonth().getDisplayName(java.time.format.TextStyle.FULL, br) + " de " +
+                    hoje.getYear();
+
+            PdfPCell cellData = new PdfPCell(new Phrase(dataExtenso, fontDados));
+            cellData.setBorder(Rectangle.NO_BORDER);
+            cellData.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            cellData.setPaddingBottom(30);
+            footerTable.addCell(cellData);
+
+            PdfPCell cellLinha = new PdfPCell(new Phrase("__________________________________________________________", fontDados));
+            cellLinha.setBorder(Rectangle.NO_BORDER);
+            cellLinha.setHorizontalAlignment(Element.ALIGN_CENTER);
+            footerTable.addCell(cellLinha);
+
+            PdfPCell cellAss = new PdfPCell(new Phrase("Assinatura do Responsável", fontLabel));
+            cellAss.setBorder(Rectangle.NO_BORDER);
+            cellAss.setHorizontalAlignment(Element.ALIGN_CENTER);
+            footerTable.addCell(cellAss);
+
+            footerTable.writeSelectedRows(0, -1, 36, 120, writer.getDirectContent());
 
             document.close();
         } catch (Exception e) {
@@ -137,123 +153,103 @@ public class PdfService {
     }
 
     // =================================================================================
-    // TIPO 2: RELATÓRIO MENSAL
+    // 2. RELATÓRIO MENSAL (CÓDIGO NOVO CORRIGIDO)
     // =================================================================================
-
     public byte[] gerarRelatorioMensalPreenchido(RelatorioMensal relatorio, String descricao) {
-        Document document = new Document(PageSize.A4, 30, 30, 20, 20);
+        Document document = new Document(PageSize.A4, 30, 30, 20, 40);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Instituicao dadosInst = getDadosInstituicao();
 
         try {
-            PdfWriter.getInstance(document, out);
+            PdfWriter writer = PdfWriter.getInstance(document, out);
             document.open();
 
-            // --- INSERE A LOGO ---
+            // LOGO
             adicionarLogo(document);
-            // ---------------------
 
-            Font fTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+            // TÍTULO
+            Font fTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16);
             Paragraph titulo = new Paragraph("RELATÓRIO MENSAL", fTitulo);
             titulo.setAlignment(Element.ALIGN_CENTER);
-            titulo.setSpacingAfter(15);
+            titulo.setSpacingAfter(10);
             document.add(titulo);
 
             Font fBold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
             Font fNormal = FontFactory.getFont(FontFactory.HELVETICA, 10);
 
-            // INFORMAÇÕES GERAIS
-            adicionarTituloSecao(document, "INFORMAÇÕES GERAIS", fBold);
-            PdfPTable info = new PdfPTable(2);
-            info.setWidthPercentage(100);
+            // TABELA 1: INFORMAÇÕES GERAIS (Título embutido)
+            PdfPTable tabelaInfo = new PdfPTable(2);
+            tabelaInfo.setWidthPercentage(100);
 
-            adicionarCelula(info, "Curso / Atividade:", relatorio.getCurso(), fBold, fNormal, 1);
-            adicionarCelula(info, "Polo / Núcleo:", relatorio.getPolo(), fBold, fNormal, 1);
-            adicionarCelula(info, "Cidade:", relatorio.getCidade(), fBold, fNormal, 1);
+            adicionarCabecalhoRelatorio(tabelaInfo, "INFORMAÇÕES GERAIS", 2);
 
+            adicionarCelulaComBorda(tabelaInfo, "Curso / Atividade:", relatorio.getCurso(), fBold, fNormal);
+            adicionarCelulaComBorda(tabelaInfo, "Polo / Núcleo:", relatorio.getPolo(), fBold, fNormal);
+            adicionarCelulaComBorda(tabelaInfo, "Cidade:", relatorio.getCidade(), fBold, fNormal);
             String prof = relatorio.getFuncionario() != null ? relatorio.getFuncionario().getNomeCompleto() : "";
-            adicionarCelula(info, "Professor(a):", prof, fBold, fNormal, 1);
-            document.add(info);
+            adicionarCelulaComBorda(tabelaInfo, "Professor(a):", prof, fBold, fNormal);
 
-            // PERÍODO
-            adicionarTituloSecao(document, "PERÍODO DE REFERÊNCIA", fBold);
-            PdfPTable periodo = new PdfPTable(2);
-            periodo.setWidthPercentage(100);
+            document.add(tabelaInfo);
+            document.add(new Paragraph(" "));
+
+            // TABELA 2: PERÍODO (Título embutido)
+            PdfPTable tabelaPeriodo = new PdfPTable(2);
+            tabelaPeriodo.setWidthPercentage(100);
+
+            adicionarCabecalhoRelatorio(tabelaPeriodo, "PERÍODO DE REFERÊNCIA", 2);
+
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String dataIni = relatorio.getDataInicio() != null ? relatorio.getDataInicio().format(fmt) : "";
+            String dataFim = relatorio.getDataFim() != null ? relatorio.getDataFim().format(fmt) : "";
 
-            adicionarCelula(periodo, "Data Início:", relatorio.getDataInicio() != null ? relatorio.getDataInicio().format(fmt) : "", fBold, fNormal, 1);
-            adicionarCelula(periodo, "Data Fim:", relatorio.getDataFim() != null ? relatorio.getDataFim().format(fmt) : "", fBold, fNormal, 1);
-            document.add(periodo);
+            adicionarCelulaComBorda(tabelaPeriodo, "Data Início:", dataIni, fBold, fNormal);
+            adicionarCelulaComBorda(tabelaPeriodo, "Data Fim:", dataFim, fBold, fNormal);
 
-            // DESCRIÇÃO COM LINHAS
-            adicionarTituloSecao(document, "DESCRIÇÃO DAS ATIVIDADES / OCORRÊNCIAS", fBold);
-            Font fonteDesc = FontFactory.getFont(FontFactory.HELVETICA, 10);
+            document.add(tabelaPeriodo);
+            document.add(new Paragraph(" "));
 
-            int totalLinhas = 20;
-            float alturaLinha = 18f;
-            String texto = descricao != null ? descricao : "";
-            String[] linhasTexto = texto.split("\\r?\\n");
+            // TABELA 3: DESCRIÇÃO (Título embutido + Linhas)
+            PdfPTable tabelaDescContainer = new PdfPTable(1);
+            tabelaDescContainer.setWidthPercentage(100);
 
-            PdfPTable tabelaContainer = new PdfPTable(1);
-            tabelaContainer.setWidthPercentage(100);
+            adicionarCabecalhoRelatorio(tabelaDescContainer, "DESCRIÇÃO DAS ATIVIDADES / OCORRÊNCIAS", 1);
 
-            PdfPCell container = new PdfPCell();
-            container.setBorder(Rectangle.BOX);
-            container.setBorderWidth(1f);
-            container.setPadding(0);
+            PdfPCell celulaLinhas = new PdfPCell();
+            celulaLinhas.setBorder(Rectangle.BOX);
+            celulaLinhas.setPadding(0);
 
             PdfPTable tabelaLinhas = new PdfPTable(1);
             tabelaLinhas.setWidthPercentage(100);
 
-            for (int i = 0; i < totalLinhas; i++) {
-                String conteudoLinha = "";
-                if (i < linhasTexto.length) {
-                    conteudoLinha = linhasTexto[i];
-                    if (conteudoLinha.length() > 110) {
-                        conteudoLinha = conteudoLinha.substring(0, 110);
-                    }
-                }
+            int totalLinhas = 18;
+            float alturaLinha = 18f;
+            String texto = descricao != null ? descricao : "";
+            String[] linhasTexto = texto.split("\\r?\\n");
 
-                PdfPCell linha = new PdfPCell(new Paragraph(conteudoLinha, fonteDesc));
+            Font fonteDesc = FontFactory.getFont(FontFactory.HELVETICA, 10);
+
+            for (int i = 0; i < totalLinhas; i++) {
+                String conteudo = (i < linhasTexto.length) ? linhasTexto[i] : "";
+                if (conteudo.length() > 105) conteudo = conteudo.substring(0, 105);
+
+                PdfPCell linha = new PdfPCell(new Paragraph(conteudo, fonteDesc));
                 linha.setFixedHeight(alturaLinha);
-                linha.setPaddingLeft(6);
-                linha.setPaddingBottom(4);
-                linha.setVerticalAlignment(Element.ALIGN_BOTTOM);
                 linha.setBorder(Rectangle.BOTTOM);
                 linha.setBorderColor(Color.LIGHT_GRAY);
+                linha.setVerticalAlignment(Element.ALIGN_BOTTOM);
+                linha.setPaddingLeft(5);
 
-                if (i == totalLinhas - 1) {
-                    linha.setBorder(Rectangle.NO_BORDER);
-                }
+                if (i == totalLinhas - 1) linha.setBorder(Rectangle.NO_BORDER);
+
                 tabelaLinhas.addCell(linha);
             }
 
-            container.addElement(tabelaLinhas);
-            tabelaContainer.addCell(container);
-            document.add(tabelaContainer);
+            celulaLinhas.addElement(tabelaLinhas);
+            tabelaDescContainer.addCell(celulaLinhas);
+            document.add(tabelaDescContainer);
 
-            // ESPAÇO ANTES DAS ASSINATURAS
-            document.add(new Paragraph("\n\n\n"));
-
-            // ASSINATURAS
-            PdfPTable ass = new PdfPTable(2);
-            ass.setWidthPercentage(70);
-            ass.setHorizontalAlignment(Element.ALIGN_CENTER);
-            ass.setWidths(new float[]{1.1f, 1.1f});
-
-            ass.addCell(criarCelulaAssinatura("Assinatura do Instrutor", fBold, fNormal));
-            ass.addCell(criarCelulaAssinatura("Visto da Coordenação", fBold, fNormal));
-
-            document.add(ass);
-
-            // ENDEREÇO
-            document.add(new Paragraph("\n"));
-            Paragraph footer = new Paragraph(
-                    dadosInst.getEnderecoCompleto(),
-                    FontFactory.getFont(FontFactory.HELVETICA, 8, Color.GRAY)
-            );
-            footer.setAlignment(Element.ALIGN_CENTER);
-            document.add(footer);
+            // RODAPÉ FIXO
+            adicionarRodapeFixo(writer, dadosInst.getEnderecoCompleto(), fBold);
 
             document.close();
         } catch (Exception e) {
@@ -263,60 +259,142 @@ public class PdfService {
     }
 
     // =================================================================================
-    // MÉTODOS AUXILIARES
+    // MÉTODOS AUXILIARES (COMPARTILHADOS E ESPECÍFICOS)
     // =================================================================================
 
-    // --- NOVO MÉTODO PARA ADICIONAR LOGO EM QUALQUER PDF ---
-    private void adicionarLogo(Document document) {
-        try {
-            // Caminho correto para imagem salva em src/main/resources/static/img/
-            ClassPathResource imgResource = new ClassPathResource("static/img/logo_gol_social.jpeg");
-
-            if (imgResource.exists()) {
-                Image logo = Image.getInstance(imgResource.getURL());
-                // Ajusta o tamanho (largura, altura) - mantendo a proporção
-                logo.scaleToFit(150, 80);
-                logo.setAlignment(Element.ALIGN_CENTER);
-                document.add(logo);
-            } else {
-                System.out.println("LOG: Imagem da logo não encontrada no caminho especificado.");
-            }
-        } catch (Exception e) {
-            // Log do erro para ajudar no debug
-            System.err.println("ERRO ao inserir logo: " + e.getMessage());
-        }
-    }
-
-    private void adicionarTituloSecao(Document doc, String titulo, Font font) throws DocumentException {
+    // Auxiliar para a FICHA (estilo separado)
+    private void adicionarTituloSecaoFicha(Document doc, String titulo, Font font) throws DocumentException {
         PdfPTable table = new PdfPTable(1);
         table.setWidthPercentage(100);
-        table.setSpacingBefore(10);
-        PdfPCell cell = new PdfPCell(new Paragraph(titulo, font));
-        cell.setBackgroundColor(Color.LIGHT_GRAY);
+        PdfPCell cell = new PdfPCell(new Phrase(titulo.toUpperCase(), font));
+        cell.setBackgroundColor(COR_CINZA_ESCURO);
+        cell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setPadding(5);
         cell.setBorder(Rectangle.NO_BORDER);
-        cell.setPadding(4);
         table.addCell(cell);
         doc.add(table);
     }
 
-    private void adicionarCelula(PdfPTable table, String label, String valor,
-                                 Font fBold, Font fNormal, int colspan) {
+    // Auxiliar para a FICHA (tabela de dados)
+    private PdfPTable criarTabelaGrade(float[] larguras) throws DocumentException {
+        PdfPTable table = new PdfPTable(larguras);
+        table.setWidthPercentage(100);
+        return table;
+    }
+
+    // Auxiliar para a FICHA (célula de dados)
+    private void addCelulaGrade(PdfPTable table, String label, String valor, Font fLabel, Font fDados) {
+        PdfPTable inner = new PdfPTable(1);
+        PdfPCell cLabel = new PdfPCell(new Phrase(label, fLabel));
+        cLabel.setBorder(Rectangle.NO_BORDER);
+        PdfPCell cValor = new PdfPCell(new Phrase(valor != null ? valor : "", fDados));
+        cValor.setBorder(Rectangle.NO_BORDER);
+        inner.addCell(cLabel);
+        inner.addCell(cValor);
+        PdfPCell cellOuter = new PdfPCell(inner);
+        cellOuter.setBorder(Rectangle.BOX);
+        cellOuter.setPadding(4);
+        table.addCell(cellOuter);
+    }
+
+    // Auxiliar para o RELATÓRIO (cabeçalho conectado)
+    private void adicionarCabecalhoRelatorio(PdfPTable table, String texto, int colspan) {
+        Font fontHeader = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.WHITE);
+        PdfPCell header = new PdfPCell(new Phrase(texto, fontHeader));
+        header.setBackgroundColor(COR_CINZA_ESCURO);
+        header.setHorizontalAlignment(Element.ALIGN_LEFT);
+        header.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        header.setPadding(6);
+        header.setColspan(colspan);
+        header.setBorder(Rectangle.BOX); // Borda para conectar
+        table.addCell(header);
+    }
+
+    // Auxiliar para o RELATÓRIO (célula com borda)
+    private void adicionarCelulaComBorda(PdfPTable table, String label, String valor, Font fBold, Font fNormal) {
         PdfPCell cell = new PdfPCell();
-        cell.setColspan(colspan);
-        cell.setPadding(5);
-        Paragraph p = new Paragraph();
+        cell.setBorder(Rectangle.BOX);
+        cell.setPadding(6);
+        Phrase p = new Phrase();
         p.add(new Chunk(label + " ", fBold));
         p.add(new Chunk(valor != null ? valor : "", fNormal));
         cell.addElement(p);
         table.addCell(cell);
     }
 
-    private PdfPCell criarCelulaAssinatura(String texto, Font fBold, Font fNormal) {
+    // Auxiliar para o RELATÓRIO (Rodapé Fixo)
+    private void adicionarRodapeFixo(PdfWriter writer, String endereco, Font fontBold) {
+        try {
+            PdfPTable tableFooter = new PdfPTable(1);
+            tableFooter.setTotalWidth(530);
+
+            // Assinaturas
+            PdfPTable ass = new PdfPTable(2);
+            ass.setWidths(new float[]{1f, 1f});
+            ass.addCell(criarCelulaAssinatura("Assinatura do Instrutor", fontBold));
+            ass.addCell(criarCelulaAssinatura("Visto da Coordenação", fontBold));
+
+            PdfPCell cellAss = new PdfPCell(ass);
+            cellAss.setBorder(Rectangle.NO_BORDER);
+            tableFooter.addCell(cellAss);
+
+            // Espaço
+            PdfPCell espaco = new PdfPCell(new Paragraph(" "));
+            espaco.setBorder(Rectangle.NO_BORDER);
+            espaco.setFixedHeight(10f);
+            tableFooter.addCell(espaco);
+
+            // Endereço
+            Font fontEnd = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.GRAY);
+            PdfPCell cellEnd = new PdfPCell(new Paragraph(endereco, fontEnd));
+            cellEnd.setHorizontalAlignment(Element.ALIGN_CENTER);
+            cellEnd.setBorder(Rectangle.NO_BORDER);
+            tableFooter.addCell(cellEnd);
+
+            // Escreve fixo no final (Y=120)
+            tableFooter.writeSelectedRows(0, -1, 32, 120, writer.getDirectContent());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private PdfPCell criarCelulaAssinatura(String texto, Font fBold) {
         PdfPCell cell = new PdfPCell();
         cell.setBorder(Rectangle.NO_BORDER);
         cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell.addElement(new Paragraph("_______________________________", fNormal));
-        cell.addElement(new Paragraph(texto, fBold));
+        cell.setPaddingTop(10);
+
+        Paragraph linha = new Paragraph("___________________________________", fBold);
+        linha.setAlignment(Element.ALIGN_CENTER);
+        cell.addElement(linha);
+
+        Paragraph pTexto = new Paragraph(texto, fBold);
+        pTexto.setAlignment(Element.ALIGN_CENTER);
+        cell.addElement(pTexto);
+
         return cell;
+    }
+
+    // Auxiliar Comum (Logo)
+    private void adicionarLogo(Document doc) {
+        try {
+            ClassPathResource imageFile = new ClassPathResource("static/img/logo_gol_social.jpeg");
+            Image logo = Image.getInstance(imageFile.getURL());
+            logo.scaleToFit(100, 100);
+            logo.setAlignment(Element.ALIGN_CENTER);
+            logo.setSpacingAfter(5);
+            doc.add(logo);
+        } catch (Exception e) { System.out.println("Sem logo"); }
+    }
+
+    // Auxiliar Comum (Dados Instituição)
+    private Instituicao getDadosInstituicao() {
+        List<Instituicao> lista = instituicaoRepository.findAll();
+        if (!lista.isEmpty()) return lista.get(0);
+        Instituicao p = new Instituicao();
+        p.setEnderecoCompleto("Endereço não cadastrado");
+        return p;
     }
 }

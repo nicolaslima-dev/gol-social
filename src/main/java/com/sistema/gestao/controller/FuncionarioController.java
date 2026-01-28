@@ -2,68 +2,72 @@ package com.sistema.gestao.controller;
 
 import com.sistema.gestao.entity.Funcionario;
 import com.sistema.gestao.repository.FuncionarioRepository;
+import com.sistema.gestao.repository.TurmaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes; // <--- IMPORTANTE: Adicione esta linha
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
+@RequestMapping("/funcionarios") // Prefixo geral para todas as rotas
 public class FuncionarioController {
 
     @Autowired
-    private FuncionarioRepository repository;
+    private FuncionarioRepository funcionarioRepository;
 
-    @GetMapping("/funcionarios")
+    @Autowired
+    private TurmaRepository turmaRepository;
+
+    // --- LISTAR (Resolve o erro 404) ---
+    @GetMapping
     public String listar(Model model) {
-        model.addAttribute("lista", repository.findAll());
-        return "lista_funcionarios";
+        // Seu HTML espera a variável "lista"
+        model.addAttribute("lista", funcionarioRepository.findAll());
+        return "lista_funcionarios"; // NOME EXATO DO SEU ARQUIVO HTML
     }
 
-    @GetMapping("/funcionarios/novo")
+    // --- NOVO CADASTRO ---
+    @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("funcionario", new Funcionario());
+        model.addAttribute("listaTurmas", turmaRepository.findAll());
         return "form_funcionario";
     }
 
-    @PostMapping("/funcionarios/salvar")
-    public String salvar(@ModelAttribute Funcionario funcionario) {
-        repository.save(funcionario);
-        return "redirect:/funcionarios";
+    // --- SALVAR ---
+    @PostMapping("/salvar")
+    public String salvar(Funcionario funcionario) {
+        funcionarioRepository.save(funcionario);
+        return "redirect:/funcionarios"; // Volta para a lista
     }
 
-    @GetMapping("/funcionarios/editar/{id}")
+    // --- EDITAR ---
+    @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
-        Funcionario func = repository.findById(id).orElse(null);
-        model.addAttribute("funcionario", func);
+        Funcionario f = funcionarioRepository.findById(id).orElseThrow();
+        model.addAttribute("funcionario", f);
+        model.addAttribute("listaTurmas", turmaRepository.findAll());
         return "form_funcionario";
     }
 
-    // --- MÉTODO EXCLUIR ATUALIZADO ---
-    @GetMapping("/funcionarios/excluir/{id}")
-    public String excluir(@PathVariable Long id) {
-        Funcionario funcionario = repository.findById(id).orElse(null);
-
-        if (funcionario != null) {
-            funcionario.setAtivo(false); // Apenas desativa
-            repository.save(funcionario); // Atualiza no banco
-        }
-
+    // --- EXCLUIR / DESATIVAR (Conforme seu HTML) ---
+    @GetMapping("/excluir/{id}")
+    public String desativar(@PathVariable Long id) {
+        Funcionario f = funcionarioRepository.findById(id).orElseThrow();
+        f.setAtivo(false); // Apenas desativa, mantendo histórico
+        funcionarioRepository.save(f);
         return "redirect:/funcionarios";
     }
 
-    @GetMapping("/funcionarios/ativar/{id}")
+    // --- REATIVAR (Conforme seu HTML) ---
+    @GetMapping("/ativar/{id}")
     public String ativar(@PathVariable Long id) {
-        Funcionario funcionario = repository.findById(id).orElse(null);
-
-        if (funcionario != null) {
-            funcionario.setAtivo(true); // Muda para ATIVO
-            repository.save(funcionario);
-        }
-
+        Funcionario f = funcionarioRepository.findById(id).orElseThrow();
+        f.setAtivo(true);
+        funcionarioRepository.save(f);
         return "redirect:/funcionarios";
     }
 }

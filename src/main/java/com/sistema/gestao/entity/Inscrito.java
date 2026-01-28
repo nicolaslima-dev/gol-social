@@ -16,7 +16,6 @@ public class Inscrito {
     private Long id;
 
     // --- DADOS PESSOAIS ---
-
     @NotBlank(message = "O nome é obrigatório")
     private String nomeCompleto;
 
@@ -30,7 +29,6 @@ public class Inscrito {
     private LocalDate dataNascimento;
 
     // --- ENDEREÇO ---
-
     @NotBlank(message = "O endereço é obrigatório")
     private String endereco;
 
@@ -41,7 +39,6 @@ public class Inscrito {
     private String cidade;
 
     // --- RESPONSÁVEL ---
-
     @NotBlank(message = "O nome do responsável é obrigatório")
     private String nomeResponsavel;
 
@@ -52,22 +49,18 @@ public class Inscrito {
 
     private String email;
 
-    // --- MATRÍCULA ---
+    // --- MATRÍCULA (ALTERADO AQUI!) ---
+    // Removemos modalidade, horario e polo (strings) e colocamos o Objeto Turma
 
-    @NotBlank(message = "A modalidade é obrigatória")
-    private String modalidade;
-
-    private String horario;
-
-    @NotBlank(message = "O polo é obrigatório")
-    private String polo;
+    @ManyToOne
+    @JoinColumn(name = "turma_id")
+    private Turma turma;
 
     private boolean fichaAnexada;
 
     private String observacoes;
 
     // --- CAMPOS DE CONTROLE ---
-
     private boolean ativo = true;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd")
@@ -75,9 +68,7 @@ public class Inscrito {
 
     private String lancadoPor;
 
-    // --- RELACIONAMENTOS (Correção do erro do HomeController) ---
-
-    // Um inscrito pode ter várias frequências
+    // --- RELACIONAMENTOS ---
     @OneToMany(mappedBy = "inscrito", cascade = CascadeType.ALL)
     private List<Frequencia> frequencias = new ArrayList<>();
 
@@ -121,14 +112,9 @@ public class Inscrito {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    public String getModalidade() { return modalidade; }
-    public void setModalidade(String modalidade) { this.modalidade = modalidade; }
-
-    public String getHorario() { return horario; }
-    public void setHorario(String horario) { this.horario = horario; }
-
-    public String getPolo() { return polo; }
-    public void setPolo(String polo) { this.polo = polo; }
+    // GETTER E SETTER DA TURMA (Novo)
+    public Turma getTurma() { return turma; }
+    public void setTurma(Turma turma) { this.turma = turma; }
 
     public boolean isFichaAnexada() { return fichaAnexada; }
     public void setFichaAnexada(boolean fichaAnexada) { this.fichaAnexada = fichaAnexada; }
@@ -145,7 +131,6 @@ public class Inscrito {
     public String getLancadoPor() { return lancadoPor; }
     public void setLancadoPor(String lancadoPor) { this.lancadoPor = lancadoPor; }
 
-    // Getter e Setter da Lista de Frequências
     public List<Frequencia> getFrequencias() { return frequencias; }
     public void setFrequencias(List<Frequencia> frequencias) { this.frequencias = frequencias; }
 }

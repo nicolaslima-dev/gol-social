@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: cabecalho}"></head>
+
+<body>
+<div class="container-fluid">
+    <div class="row">
+
+        <div th:replace="~{layout :: menu-lateral}"></div>
+
+        <main class="col-md-10 ms-sm-auto px-md-4 py-4">
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 style="color: var(--cor-principal);">
+                    <i class="bi bi-easel-fill"></i> Gestão de Turmas
+                </h2>
+                <a href="/turmas/novo" class="btn btn-primary shadow-sm">
+                    <i class="bi bi-plus-lg"></i> Nova Turma
+                </a>
+            </div>
+
+            <div th:if="${param.sucesso}" class="alert alert-success alert-dismissible fade show">
+                Turma salva com sucesso!
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-brand text-white">
+                    <i class="bi bi-list-ul me-2"></i> Turmas Cadastradas
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Núcleo</th>
+                                <th>Modalidade</th>
+                                <th>Nome da Turma</th>
+                                <th>Horário</th>
+                                <th>Capacidade</th>
+                                <th class="text-end pe-4">Ações</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="t : ${turmas}">
+                                <td class="ps-4 fw-bold" th:text="${t.nucleo}">Núcleo</td>
+                                <td>
+                                    <span th:if="${t.modalidade == 'Futsal'}" class="badge bg-success">Futsal</span>
+                                    <span th:if="${t.modalidade == 'Futebol'}" class="badge bg-primary">Futebol</span>
+                                </td>
+                                <td th:text="${t.nome}">Nome</td>
+                                <td th:text="${t.horario}">00:00</td>
+                                <td>
+                                    <span class="badge bg-secondary" th:text="${t.capacidade} + ' vagas'"></span>
+                                </td>
+
+                                <td class="text-end pe-4">
+                                    <a th:href="@{/turmas/editar/{id}(id=${t.id})}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                </td>
+                            </tr>
+
+                            <tr th:if="${#lists.isEmpty(turmas)}">
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    Nenhuma turma cadastrada.
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+</body>
+</html>

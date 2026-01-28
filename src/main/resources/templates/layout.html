@@ -12,26 +12,18 @@
     <style>
         /* --- PALETA DE CORES (Baseada na leitura #5F1B58) --- */
         :root {
-            /* A COR EXATA QUE VOCÊ PEGOU NO CONTA-GOTAS */
             --cor-principal: #5F1B58;
-
-            /* Um tom levemente mais escuro para quando passar o mouse */
             --cor-hover: #4a1544;
-
-            /* Lilás bem claro para o texto */
             --cor-texto-menu: #f8eaf6;
-
-            /* Amarelo/Dourado para destaque (combina muito com roxo) */
             --cor-destaque: #f1c40f;
         }
 
-        /* Classe utilitária para fundo roxo */
         .bg-brand {
             background-color: var(--cor-principal) !important;
             color: white;
         }
 
-        /* Ajuste dos botões primários para serem roxos */
+        /* Botões padronizados com a cor do projeto */
         .btn-primary {
             background-color: var(--cor-principal);
             border-color: var(--cor-principal);
@@ -39,6 +31,12 @@
         .btn-primary:hover {
             background-color: var(--cor-hover);
             border-color: var(--cor-hover);
+        }
+
+        /* Estilos de Tabela Padrão */
+        .table-header-brand {
+            background-color: var(--cor-principal) !important;
+            color: white !important;
         }
 
         /* --- SIDEBAR (Desktop) --- */
@@ -50,7 +48,6 @@
             position: sticky;
             top: 0;
             z-index: 1000;
-            /* Sem borda lateral para ajudar na imersão */
             border-right: none;
         }
 
@@ -78,7 +75,6 @@
         .logo-img {
             max-width: 100%;
             height: auto;
-            /* Sem bordas ou fundo extra */
         }
 
         /* --- NAVBAR (Mobile) --- */
@@ -115,6 +111,8 @@
                     <a href="/" class="nav-link text-white"><i class="bi bi-speedometer2"></i> Dashboard</a>
                     <a href="/inscritos" class="nav-link text-white"><i class="bi bi-people-fill"></i> Beneficiários</a>
 
+                    <a href="/turmas" class="nav-link text-white"><i class="bi bi-easel-fill"></i> Gestão de Turmas</a>
+
                     <a href="/frequencia" class="nav-link text-white" sec:authorize="hasAnyRole('ADMIN', 'PROFESSOR')">
                         <i class="bi bi-calendar-check"></i> Frequência
                     </a>
@@ -141,6 +139,8 @@
 
         <a href="/"><i class="bi bi-speedometer2"></i> Dashboard</a>
         <a href="/inscritos"><i class="bi bi-people-fill"></i> Beneficiários</a>
+
+        <a href="/turmas"><i class="bi bi-easel-fill"></i> Turmas</a>
 
         <a href="/frequencia" sec:authorize="hasAnyRole('ADMIN', 'PROFESSOR')"><i class="bi bi-calendar-check"></i> Frequência</a>
         <a href="/atividades" sec:authorize="hasAnyRole('ADMIN', 'PROFESSOR')"><i class="bi bi-journal-text"></i> Diário</a>

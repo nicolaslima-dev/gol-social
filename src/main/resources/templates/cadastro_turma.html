@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout :: cabecalho}"></head>
+
+<body>
+<div class="container-fluid">
+    <div class="row">
+
+        <div th:replace="~{layout :: menu-lateral}"></div>
+
+        <main class="col-md-10 ms-sm-auto px-md-4 py-4">
+
+            <h2 class="mb-4" style="color: var(--cor-principal);">
+                <i th:class="${turma.id == null ? 'bi bi-plus-circle' : 'bi bi-pencil-square'}"></i>
+                <span th:text="${turma.id == null ? 'Nova Turma' : 'Editar Turma'}"></span>
+            </h2>
+
+            <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> <span th:text="${erro}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <form th:action="@{/turmas/salvar}" th:object="${turma}" method="post">
+
+                <input type="hidden" th:field="*{id}" />
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-brand text-white">
+                        Preencha os dados da turma
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Núcleo</label>
+                                <select class="form-select" th:field="*{nucleo}" required>
+                                    <option value="" selected>Selecione...</option>
+                                    <option value="Nucleo 01">Núcleo 01</option>
+                                    <option value="Nucleo 02">Núcleo 02</option>
+                                    <option value="Nucleo 03">Núcleo 03</option>
+                                    <option value="Nucleo 04">Núcleo 04</option>
+                                    <option value="Nucleo 05">Núcleo 05</option>
+                                    <option value="Nucleo 06">Núcleo 06</option>
+                                    <option value="Nucleo 07">Núcleo 07</option>
+                                    <option value="Nucleo 08">Núcleo 08</option>
+                                    <option value="Nucleo 09">Núcleo 09</option>
+                                    <option value="Nucleo 10">Núcleo 10</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Modalidade</label>
+                                <select class="form-select" th:field="*{modalidade}" required>
+                                    <option value="" selected>Selecione...</option>
+                                    <option value="Futsal">Futsal</option>
+                                    <option value="Futebol">Futebol</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Nome da Turma (Opcional)</label>
+                                <input type="text" class="form-control" th:field="*{nome}" placeholder="Gerado automaticamente se vazio">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Capacidade (Vagas)</label>
+                                <input type="number" class="form-control" th:field="*{capacidade}" required min="1">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Dias da Semana</label>
+                                <input type="text" class="form-control" th:field="*{diasSemana}" required placeholder="Ex: Seg e Qua">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Horário</label>
+                                <input type="text" class="form-control" th:field="*{horario}" required placeholder="Ex: 09:00 - 10:00">
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-0 py-3 text-end">
+                        <a href="/turmas" class="btn btn-outline-secondary me-2">Cancelar</a>
+                        <button type="submit" class="btn btn-primary px-4">Salvar</button>
+                    </div>
+                </div>
+            </form>
+
+        </main>
+    </div>
+</div>
+</body>
+</html>

@@ -2,6 +2,7 @@ package com.sistema.gestao.controller;
 
 import com.sistema.gestao.entity.Inscrito;
 import com.sistema.gestao.repository.InscritoRepository;
+import com.sistema.gestao.repository.TurmaRepository;
 import com.sistema.gestao.service.PdfService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -27,25 +28,34 @@ public class InscritoController {
     private InscritoRepository repository;
 
     @Autowired
+    private TurmaRepository turmaRepository; // Necessário para os Cards
+
+    @Autowired
     private PdfService pdfService;
 
+    // LISTAR
     @GetMapping("/inscritos")
     public String listar(Model model) {
         model.addAttribute("lista", repository.findAll());
-        return "lista_inscritos";
+        return "lista_inscritos"; // Ou o nome da sua lista
     }
 
+    // NOVO (Chama o formulario.html)
     @GetMapping("/inscritos/novo")
     public String novo(Model model) {
         model.addAttribute("inscrito", new Inscrito());
-        return "formulario";
+        model.addAttribute("listaTurmas", turmaRepository.findAll()); // Envia turmas para os Cards
+        return "formulario"; // <--- AJUSTADO AQUI
     }
 
+    // SALVAR
     @PostMapping("/inscritos/salvar")
-    public String salvar(@Valid @ModelAttribute Inscrito inscrito, BindingResult result) {
+    public String salvar(@Valid @ModelAttribute Inscrito inscrito, BindingResult result, Model model) {
 
         if (result.hasErrors()) {
-            return "formulario";
+            // Se der erro, precisamos reenviar a lista de turmas para o formulário não quebrar
+            model.addAttribute("listaTurmas", turmaRepository.findAll());
+            return "formulario"; // <--- AJUSTADO AQUI
         }
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -54,20 +64,26 @@ public class InscritoController {
         if (inscrito.getId() == null) {
             inscrito.setDataPreenchimento(LocalDate.now());
         }
-
         inscrito.setLancadoPor(usuarioLogado);
 
         repository.save(inscrito);
         return "redirect:/inscritos";
     }
 
+    // EDITAR (Chama o formulario.html)
     @GetMapping("/inscritos/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
         Inscrito inscrito = repository.findById(id).orElse(null);
-        model.addAttribute("inscrito", inscrito);
-        return "formulario";
+
+        if (inscrito != null) {
+            model.addAttribute("inscrito", inscrito);
+            model.addAttribute("listaTurmas", turmaRepository.findAll()); // Envia turmas
+            return "formulario"; // <--- AJUSTADO AQUI
+        }
+        return "redirect:/inscritos";
     }
 
+    // ... (Mantenha os métodos de inativar, ativar, excluir e PDF iguais ao que você já tinha) ...
     @GetMapping("/inscritos/inativar/{id}")
     public String inativar(@PathVariable Long id) {
         Inscrito inscrito = repository.findById(id).orElse(null);

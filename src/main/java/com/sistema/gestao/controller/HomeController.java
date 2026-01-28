@@ -1,6 +1,5 @@
 package com.sistema.gestao.controller;
 
-import com.sistema.gestao.entity.Frequencia;
 import com.sistema.gestao.entity.Inscrito;
 import com.sistema.gestao.repository.AtividadeAulaRepository;
 import com.sistema.gestao.repository.InscritoRepository;
@@ -24,8 +23,6 @@ public class HomeController {
     @Autowired
     private AtividadeAulaRepository atividadeRepository;
 
-    // REMOVIDO: PagamentoRepository
-
     @GetMapping("/")
     public String dashboard(Model model) {
         // --- 1. CARDS DO TOPO ---
@@ -36,18 +33,22 @@ public class HomeController {
         long totalAulas = atividadeRepository.count();
         model.addAttribute("aulasMes", totalAulas);
 
-        // REMOVIDO: Cálculo de Saldo
-
         // --- 2. LÓGICA DE ALERTAS ---
         List<AlertaDTO> listaAlertas = new ArrayList<>();
 
         for (Inscrito aluno : todosAlunos) {
+            // Pula alunos inativos (se houver essa lógica) ou continua normal
             if (!aluno.isAtivo()) continue;
 
             // REGRA 1: Faltas
             long faltas = 0;
             if (aluno.getFrequencias() != null) {
-                faltas = aluno.getFrequencias().stream().filter(f -> !f.isPresente()).count();
+                // CORREÇÃO AQUI:
+                // Antes: !f.isPresente()
+                // Agora: Verificamos se o status é igual a "F"
+                faltas = aluno.getFrequencias().stream()
+                        .filter(f -> "F".equals(f.getStatus()))
+                        .count();
             }
 
             if (faltas >= 3) {
@@ -70,7 +71,8 @@ public class HomeController {
         for (int i = 0; i < 6; i++) {
             LocalDate dataMes = hoje.minusMonths(5 - i);
             meses[i] = dataMes.getMonth().getDisplayName(TextStyle.SHORT, new Locale("pt", "BR"));
-            dados[i] = (int) (totalInscritos / (6 - i));
+            // Lógica simples para preencher o gráfico (substitua por dados reais se quiser no futuro)
+            dados[i] = (int) (totalInscritos / (6 - i > 0 ? 6 - i : 1));
         }
 
         model.addAttribute("graficoMeses", meses);
@@ -79,6 +81,7 @@ public class HomeController {
         return "dashboard";
     }
 
+    // DTO Interno para transportar dados para a tela
     public class AlertaDTO {
         public String nome;
         public String motivo;

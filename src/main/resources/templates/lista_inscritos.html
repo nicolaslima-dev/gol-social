@@ -3,35 +3,10 @@
 <head th:replace="~{layout :: cabecalho}"></head>
 
 <style>
-    /* Ajuste para telas menores que 600px (Celulares) */
     @media (max-width: 600px) {
-
-        /* 1. Ajuste do Cabeçalho (Título e Botão Novo) */
-        .cabecalho-responsivo {
-            flex-direction: column !important;
-            align-items: stretch !important; /* Estica o botão */
-            gap: 15px;
-        }
-
-        /* 2. Ajuste dos Botões da Tabela (Ações) */
-        .grupo-botoes {
-            display: flex;
-            flex-direction: column; /* Empilha um em cima do outro */
-            gap: 5px; /* Espaço entre eles */
-        }
-
-        .grupo-botoes .btn {
-            width: 100%; /* Botão ocupa a largura toda (fácil de clicar) */
-            margin-right: 0 !important; /* Remove margem lateral antiga */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        /* Opcional: Diminuir fonte da tabela no celular pra caber mais info */
-        .table {
-            font-size: 0.9rem;
-        }
+        .cabecalho-responsivo { flex-direction: column !important; gap: 15px; }
+        .grupo-botoes { display: flex; flex-direction: column; gap: 5px; }
+        .grupo-botoes .btn { width: 100%; display: flex; justify-content: center; }
     }
 </style>
 
@@ -45,7 +20,7 @@
 
             <div class="d-flex justify-content-between align-items-center mb-4 cabecalho-responsivo">
                 <h2 style="color: var(--cor-principal);">
-                    <i class="bi bi-people-fill"></i> Beneficiários
+                    <i class="bi bi-people-fill"></i> Gestão de Beneficiários
                 </h2>
                 <a th:href="@{/inscritos/novo}" class="btn btn-primary shadow-sm">
                     <i class="bi bi-person-plus-fill"></i> Nova Inscrição
@@ -64,44 +39,36 @@
                             <tr>
                                 <th class="ps-3">Nome</th>
                                 <th>CPF</th>
-                                <th class="text-center">Status</th>
+                                <th>Turma / Núcleo</th> <th>Horário</th> <th class="text-center">Status</th>
                                 <th class="text-end pe-4">Ações</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr th:each="item : ${lista}">
                                 <td class="ps-3 fw-bold" th:text="${item.nomeCompleto}"></td>
-                                <td th:text="${item.cpf}" style="white-space: nowrap;"></td> <td class="text-center">
-                                    <span th:if="${item.ativo}" class="badge rounded-pill bg-success">
-                                        <i class="bi bi-check-circle"></i> Ativo
-                                    </span>
-                                <span th:unless="${item.ativo}" class="badge rounded-pill bg-secondary">
-                                        <i class="bi bi-x-circle"></i> Inativo
-                                    </span>
-                            </td>
+                                <td th:text="${item.cpf}" style="white-space: nowrap;"></td>
 
-                                <td class="text-end pe-3" style="min-width: 120px;"> <div class="d-inline-flex grupo-botoes">
+                                <td>
+                                    <div th:if="${item.turma != null}">
+                                        <span class="badge bg-primary" th:text="${item.turma.modalidade}"></span>
+                                        <div class="small text-muted" th:text="${item.turma.nucleo}"></div>
+                                    </div>
+                                    <span th:if="${item.turma == null}" class="badge bg-secondary">Sem Turma</span>
+                                </td>
 
-                                    <a th:href="@{/inscritos/pdf/{id}(id=${item.id})}"
-                                       class="btn btn-sm btn-outline-danger me-md-1"
-                                       title="Baixar Ficha PDF" target="_blank">
-                                        <i class="bi bi-file-earmark-pdf-fill"></i>
-                                    </a>
+                                <td th:text="${item.turma != null ? item.turma.horario : '-'}"></td>
 
-                                    <a th:href="@{/inscritos/editar/{id}(id=${item.id})}"
-                                       class="btn btn-sm btn-outline-warning text-dark me-md-1"
-                                       title="Editar Cadastro">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
+                                <td class="text-center">
+                                    <span th:if="${item.ativo}" class="badge rounded-pill bg-success"><i class="bi bi-check-circle"></i> Ativo</span>
+                                    <span th:unless="${item.ativo}" class="badge rounded-pill bg-secondary"><i class="bi bi-x-circle"></i> Inativo</span>
+                                </td>
 
-                                    <a th:href="@{/inscritos/excluir/{id}(id=${item.id})}"
-                                       class="btn btn-sm btn-outline-danger"
-                                       onclick="return confirm('Tem certeza que deseja excluir este beneficiário?')"
-                                       title="Excluir">
-                                        <i class="bi bi-trash"></i>
-                                    </a>
-                                </div>
-
+                                <td class="text-end pe-3" style="min-width: 120px;">
+                                    <div class="d-inline-flex grupo-botoes">
+                                        <a th:href="@{/inscritos/pdf/{id}(id=${item.id})}" class="btn btn-sm btn-outline-danger me-md-1" title="PDF" target="_blank"><i class="bi bi-file-earmark-pdf-fill"></i></a>
+                                        <a th:href="@{/inscritos/editar/{id}(id=${item.id})}" class="btn btn-sm btn-outline-warning text-dark me-md-1" title="Editar"><i class="bi bi-pencil"></i></a>
+                                        <a th:href="@{/inscritos/excluir/{id}(id=${item.id})}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Excluir?')" title="Excluir"><i class="bi bi-trash"></i></a>
+                                    </div>
                                 </td>
                             </tr>
                             </tbody>
@@ -113,11 +80,5 @@
         </main>
     </div>
 </div>
-
-<script th:if="${erro}" th:inline="javascript">
-    var mensagem = /*[[${erro}]]*/ 'Erro desconhecido';
-    alert(mensagem);
-</script>
-
 </body>
 </html>
