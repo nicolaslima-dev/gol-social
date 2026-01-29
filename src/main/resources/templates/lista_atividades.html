@@ -29,11 +29,22 @@
                              th:classappend="${item.ocorrencias != null && !item.ocorrencias.isEmpty()} ? 'bg-warning text-dark' : 'text-white'"
                              th:style="${item.ocorrencias == null || item.ocorrencias.isEmpty()} ? 'background-color: var(--cor-principal);' : ''">
 
-                            <span class="fw-bold fs-5">
-                                <i class="bi bi-calendar-check me-2"></i>
-                                <span th:text="${#temporals.format(item.data, 'dd/MM/yyyy')}"></span>
-                                <small class="ms-2 opacity-75" style="font-size: 0.8em;">
-                                    | <i class="bi bi-people-fill"></i> <span th:text="${item.turma}"></span>
+                            <span class="fw-bold fs-5 d-flex align-items-center flex-wrap">
+                                <span class="me-2">
+                                    <i class="bi bi-calendar-check me-1"></i>
+                                    <span th:text="${#temporals.format(item.data, 'dd/MM/yyyy')}"></span>
+                                </span>
+
+                                <span class="badge bg-light text-dark border opacity-75 me-2" style="font-size: 0.7em;">
+                                    <i class="bi bi-person-fill"></i>
+                                    <span th:text="${item.professor != null} ? ${item.professor.nomeCompleto} : 'Prof. Não Informado'"></span>
+                                </span>
+
+                                <small class="opacity-75" style="font-size: 0.8em;">
+                                    | <i class="bi bi-people-fill"></i>
+                                    <span th:text="${item.turma != null} ? (${item.turma.modalidade} + ' ' + ${item.turma.nome} + ' - ' + ${item.turma.nucleo}) : 'Sem Turma'">
+                                        Futsal Sub-11 - Núcleo 10
+                                    </span>
                                 </small>
                             </span>
 

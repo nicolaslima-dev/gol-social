@@ -16,11 +16,18 @@ public class AtividadeAula {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate data;
 
-    private String turma; // Ex: Sub-11, Sub-13, Matutino
+    @ManyToOne
+    @JoinColumn(name = "turma_id")
+    private Turma turma;
+
+    // --- NOVO CAMPO: Vínculo com o Professor ---
+    @ManyToOne
+    @JoinColumn(name = "funcionario_id")
+    private Funcionario professor;
 
     @Column(columnDefinition = "TEXT")
-    private String descricaoAtividade; // O que foi feito na aula
+    private String descricaoAtividade;
 
     @Column(columnDefinition = "TEXT")
-    private String ocorrencias; // Machucados, brigas, avisos
+    private String ocorrencias;
 }

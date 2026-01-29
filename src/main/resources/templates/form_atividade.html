@@ -1,6 +1,59 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{layout :: cabecalho}"></head>
+
+<style>
+    /* 1. Esconde a bolinha original do Radio Button */
+    .btn-check-turma {
+        position: absolute;
+        clip: rect(0,0,0,0);
+        pointer-events: none;
+    }
+
+    /* 2. Estilo Base do Card (Igual ao da Chamada) */
+    .card-turma-radio {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 2px solid transparent; /* Borda invisível por padrão */
+        background-color: white;
+        display: block;
+        position: relative;
+    }
+
+    /* 3. Efeito Hover (Levanta o card) */
+    .card-turma-radio:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        border-color: #e0e0e0;
+    }
+
+    /* 4. ESTADO SELECIONADO (A Mágica acontece aqui) */
+    /* Quando o input anterior estiver checado, muda a borda deste card */
+    .btn-check-turma:checked + .card-turma-radio {
+        border-color: var(--cor-principal); /* Borda Roxa */
+        background-color: rgba(95, 27, 88, 0.05); /* Fundo levemente roxo */
+        box-shadow: 0 4px 10px rgba(95, 27, 88, 0.2); /* Sombra roxa */
+    }
+
+    /* 5. Ícone de Check (Aparece só quando selecionado) */
+    .icon-check-turma {
+        display: none;
+        color: var(--cor-principal);
+        font-size: 1.5rem;
+    }
+
+    .btn-check-turma:checked + .card-turma-radio .icon-check-turma {
+        display: block; /* Aparece quando selecionado */
+    }
+
+    /* Badge de vagas estilizado */
+    .badge-vagas {
+        background-color: #e9ecef;
+        color: #495057;
+        font-weight: 600;
+    }
+</style>
+
 <body>
 
 <div class="container-fluid">
@@ -18,20 +71,66 @@
                     <form th:action="@{/atividades/salvar}" th:object="${atividade}" method="post">
                         <input type="hidden" th:field="*{id}">
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold"><i class="bi bi-calendar-event"></i> Data</label>
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold"><i class="bi bi-calendar-event"></i> Data da Atividade</label>
                                 <input type="date" th:field="*{data}" class="form-control" required>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold"><i class="bi bi-people-fill"></i> Turma</label>
-                                <select th:field="*{turma}" class="form-select">
-                                    <option value="Sub-09">Sub-09 (Manhã)</option>
-                                    <option value="Sub-11">Sub-11 (Manhã)</option>
-                                    <option value="Sub-13">Sub-13 (Tarde)</option>
-                                    <option value="Sub-15">Sub-15 (Tarde)</option>
-                                    <option value="Geral">Geral</option>
-                                </select>
+                        </div>
+
+                        <div class="col-md-6"> <label class="form-label fw-bold"><i class="bi bi-person-badge-fill"></i> Professor(a) Responsável</label>
+                            <select th:field="*{professor}" class="form-select" required>
+                                <option value="" selected>Selecione...</option>
+                                <option th:each="func : ${listaFuncionarios}"
+                                        th:value="${func.id}"
+                                        th:text="${func.nomeCompleto}">
+                                    Nome do Professor
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold mb-3"><i class="bi bi-people-fill"></i> Selecione a Turma</label>
+
+                            <div class="alert alert-warning" th:if="${#lists.isEmpty(listaTurmas)}">
+                                <i class="bi bi-exclamation-triangle-fill"></i>
+                                Nenhuma turma cadastrada. Cadastre turmas no menu "Gestão de Turmas" primeiro.
+                            </div>
+
+                            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3" th:unless="${#lists.isEmpty(listaTurmas)}">
+                                <div class="col" th:each="t : ${listaTurmas}">
+
+                                    <input type="radio" class="btn-check-turma"
+                                           th:field="*{turma}"
+                                           th:value="${t.id}"
+                                           th:id="'turma_' + ${t.id}" required>
+
+                                    <label class="card card-body p-3 h-100 card-turma-radio rounded-3 shadow-sm"
+                                           th:for="'turma_' + ${t.id}">
+
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="fw-bold mb-1" style="color: var(--cor-principal);" th:text="${t.modalidade}">Futsal</h6>
+                                                <span class="badge bg-light text-dark border mb-2" th:text="${t.nome}">Turma A</span>
+                                                <small class="text-muted d-block fw-bold" th:text="${t.nucleo}">Núcleo 01</small>
+                                            </div>
+                                            <i class="bi bi-check-circle-fill icon-check-turma"></i>
+                                        </div>
+
+                                        <hr class="my-2" style="opacity: 0.1">
+
+                                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                                            <div class="small text-secondary">
+                                                <i class="bi bi-clock me-1"></i> <span th:text="${t.horario}">08:00</span><br>
+                                                <i class="bi bi-calendar-week me-1"></i> <span th:text="${t.diasSemana}">Seg/Qua</span>
+                                            </div>
+
+                                            <span class="badge badge-vagas rounded-pill">
+                                                <i class="bi bi-people-fill me-1"></i> <span th:text="${t.capacidade}">20</span> Vagas
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
