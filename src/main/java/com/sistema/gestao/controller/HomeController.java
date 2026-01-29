@@ -1,5 +1,6 @@
 package com.sistema.gestao.controller;
 
+import com.sistema.gestao.entity.Frequencia;
 import com.sistema.gestao.entity.Inscrito;
 import com.sistema.gestao.repository.AtividadeAulaRepository;
 import com.sistema.gestao.repository.InscritoRepository;
@@ -37,33 +38,49 @@ public class HomeController {
         List<AlertaDTO> listaAlertas = new ArrayList<>();
 
         for (Inscrito aluno : todosAlunos) {
-            // Pula alunos inativos (se houver essa lógica) ou continua normal
-            if (!aluno.isAtivo()) continue;
+            // Pula inativos ou alunos sem turma vinculada
+            if (!aluno.isAtivo() || aluno.getTurma() == null) continue;
 
-            // REGRA 1: Faltas
-            long faltas = 0;
-            if (aluno.getFrequencias() != null) {
-                // CORREÇÃO AQUI:
-                // Antes: !f.isPresente()
-                // Agora: Verificamos se o status é igual a "F"
-                faltas = aluno.getFrequencias().stream()
-                        .filter(f -> "F".equals(f.getStatus()))
+            // --- CÁLCULO DE FREQUÊNCIA (Importado do FrequenciaController) ---
+            List<Frequencia> historico = aluno.getFrequencias();
+
+            // Filtra apenas aulas da turma atual do aluno
+            long totalAulasTurma = historico.stream()
+                    .filter(f -> f.getTurma() != null && f.getTurma().getId().equals(aluno.getTurma().getId()))
+                    .count();
+
+            if (totalAulasTurma > 0) {
+                // Conta quantas presenças ("P") ele teve nessa turma
+                long presencas = historico.stream()
+                        .filter(f -> f.getTurma() != null && f.getTurma().getId().equals(aluno.getTurma().getId()))
+                        .filter(f -> "P".equals(f.getStatus()))
                         .count();
+
+                // Matemática simples: (Presenças / Total) * 100
+                double porcentagem = (double) presencas / totalAulasTurma * 100;
+
+                // REGRA: Se for menor que 70%, gera o alerta
+                if (porcentagem < 70.0) {
+
+                    // Monta o texto bonito: "Futsal Sub-11 (Núc. 10) - 65% Freq"
+                    String infoTurma = aluno.getTurma().getModalidade() + " " + aluno.getTurma().getNome();
+                    String infoNucleo = "(Núc. " + aluno.getTurma().getNucleo() + ")";
+                    String textoAlerta = String.format("%s %s - %.0f%% Freq", infoTurma, infoNucleo, porcentagem);
+
+                    listaAlertas.add(new AlertaDTO(aluno.getNomeCompleto(), textoAlerta, "danger"));
+                }
             }
 
-            if (faltas >= 3) {
-                listaAlertas.add(new AlertaDTO(aluno.getNomeCompleto(), faltas + " Faltas", "danger"));
-            }
-
-            // REGRA 2: Documentos
+            // --- OUTRAS REGRAS (Mantidas) ---
+            // REGRA: Documentos Pendentes
             if (aluno.getObservacoes() != null && aluno.getObservacoes().toLowerCase().contains("pendente")) {
-                listaAlertas.add(new AlertaDTO(aluno.getNomeCompleto(), "Documentação", "warning"));
+                listaAlertas.add(new AlertaDTO(aluno.getNomeCompleto(), "Documentação Pendente", "warning"));
             }
         }
 
         model.addAttribute("listaAlertas", listaAlertas);
 
-        // --- 3. DADOS DO GRÁFICO ---
+        // --- 3. DADOS DO GRÁFICO (Mantido igual) ---
         String[] meses = new String[6];
         int[] dados = new int[6];
         LocalDate hoje = LocalDate.now();
@@ -71,7 +88,6 @@ public class HomeController {
         for (int i = 0; i < 6; i++) {
             LocalDate dataMes = hoje.minusMonths(5 - i);
             meses[i] = dataMes.getMonth().getDisplayName(TextStyle.SHORT, new Locale("pt", "BR"));
-            // Lógica simples para preencher o gráfico (substitua por dados reais se quiser no futuro)
             dados[i] = (int) (totalInscritos / (6 - i > 0 ? 6 - i : 1));
         }
 
@@ -84,7 +100,7 @@ public class HomeController {
     // DTO Interno para transportar dados para a tela
     public class AlertaDTO {
         public String nome;
-        public String motivo;
+        public String motivo; // Agora carrega Turma + Núcleo + %
         public String tipo; // 'danger', 'warning'
 
         public AlertaDTO(String nome, String motivo, String tipo) {

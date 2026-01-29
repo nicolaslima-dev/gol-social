@@ -1,31 +1,79 @@
 package com.sistema.gestao.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDate;
 
 @Entity
-@Data
 public class Frequencia {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private LocalDate dataAula;
 
-    // Mantenha o seu relacionamento com Inscrito
     @ManyToOne
     @JoinColumn(name = "inscrito_id")
     private Inscrito inscrito;
 
-    // NOVO: Adicione a Turma para facilitar a busca (Inscrito está na turma, mas a aula também)
     @ManyToOne
     @JoinColumn(name = "turma_id")
     private Turma turma;
 
-    // ALTERAÇÃO: Trocamos 'boolean presente' por 'String status' para aceitar "P", "F", "J"
+    // "P" = Presença, "F" = Falta, "J" = Justificado
     private String status;
 
-    // NOVO: Para salvar o texto que o professor digitar
     private String observacao;
+
+    // =================================================================
+    // GETTERS E SETTERS (Padrão Java Bean)
+    // =================================================================
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public LocalDate getDataAula() {
+        return dataAula;
+    }
+
+    public void setDataAula(LocalDate dataAula) {
+        this.dataAula = dataAula;
+    }
+
+    public Inscrito getInscrito() {
+        return inscrito;
+    }
+
+    public void setInscrito(Inscrito inscrito) {
+        this.inscrito = inscrito;
+    }
+
+    public Turma getTurma() {
+        return turma;
+    }
+
+    public void setTurma(Turma turma) {
+        this.turma = turma;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getObservacao() {
+        return observacao;
+    }
+
+    public void setObservacao(String observacao) {
+        this.observacao = observacao;
+    }
 }
