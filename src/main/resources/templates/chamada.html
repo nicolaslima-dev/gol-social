@@ -3,7 +3,6 @@
 <head th:replace="~{layout :: cabecalho}"></head>
 
 <style>
-    /* Estilos dos Cards de Turma */
     .card-turma-select {
         transition: all 0.3s ease;
         border: 2px solid transparent;
@@ -32,12 +31,7 @@
         display: block;
     }
     a.card-turma-select:hover { color: inherit; }
-
-    /* Botão de gráfico */
-    .btn-chart:hover {
-        background-color: #e2e6ea !important;
-        transform: scale(1.1);
-    }
+    .btn-chart:hover { background-color: #e2e6ea !important; transform: scale(1.1); }
 </style>
 
 <body>
@@ -50,6 +44,15 @@
             <h2 class="mb-4" style="color: var(--cor-principal);">
                 <i class="bi bi-clipboard-check"></i> Realizar Chamada
             </h2>
+
+            <div th:if="${mensagemSucesso}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                <i class="bi bi-check-circle-fill me-2"></i> <span th:text="${mensagemSucesso}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            <div th:if="${mensagemErro}" class="alert alert-warning alert-dismissible fade show shadow-sm" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> <span th:text="${mensagemErro}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
 
             <p class="text-muted fw-bold mb-3">1. Selecione a Turma:</p>
 
@@ -73,12 +76,6 @@
                             <i class="bi bi-calendar-week me-1"></i> <span th:text="${t.diasSemana}">Dias</span>
                         </div>
                     </a>
-                </div>
-
-                <div th:if="${#lists.isEmpty(listaTurmas)}" class="col-12">
-                    <div class="alert alert-warning">
-                        <i class="bi bi-exclamation-triangle"></i> Você não possui turmas vinculadas.
-                    </div>
                 </div>
             </div>
 
@@ -109,7 +106,6 @@
                         </div>
 
                         <div class="card-body p-0">
-
                             <div th:if="${#lists.isEmpty(alunosStats)}" class="p-4 text-center text-muted">
                                 <i class="bi bi-person-x display-4"></i>
                                 <p class="mt-2">Nenhum aluno matriculado nesta turma.</p>
@@ -131,7 +127,7 @@
                                         <td class="ps-4">
                                             <div class="d-flex align-items-center">
                                                 <div>
-                                                    <div class="fw-bold text-secondary" th:text="${item.aluno.nomeCompleto}">Nome</div>
+                                                    <div class="fw-bold text-secondary" th:text="${item.aluno.nomeCompleto}">Nome do Aluno</div>
                                                 </div>
 
                                                 <button type="button" class="btn btn-sm ms-3 rounded-pill btn-chart"
@@ -172,16 +168,14 @@
                                             <input type="text" class="form-control form-control-sm" th:name="'obs_' + ${item.aluno.id}" placeholder="...">
                                         </td>
 
-                                        <div class="modal fade" th:id="'modalAluno_' + ${item.aluno.id}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal fade" th:id="'modalAluno_' + ${item.aluno.id}" tabindex="-1">
                                             <div class="modal-dialog modal-dialog-centered">
                                                 <div class="modal-content border-0 shadow">
                                                     <div class="modal-header text-white" style="background-color: var(--cor-principal);">
-                                                        <h5 class="modal-title"><i class="bi bi-person-lines-fill me-2"></i> Histórico</h5>
+                                                        <h5 class="modal-title" th:text="${item.aluno.nomeCompleto}">Histórico</h5>
                                                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <h5 class="fw-bold text-center mb-3" th:text="${item.aluno.nomeCompleto}">Nome</h5>
-
                                                         <div class="progress" style="height: 25px;">
                                                             <div class="progress-bar fw-bold" role="progressbar"
                                                                  th:style="'width: ' + ${item.porcentagem} + '%'"
@@ -189,21 +183,16 @@
                                                                  th:text="${item.porcentagem} + '%'">
                                                             </div>
                                                         </div>
-
                                                         <div class="row text-center mt-3 g-2">
                                                             <div class="col-4"><div class="p-2 bg-light border rounded"><small>Aulas</small><br><strong th:text="${item.totalAulas}">0</strong></div></div>
                                                             <div class="col-4"><div class="p-2 bg-light border rounded"><small class="text-success">Presenças</small><br><strong class="text-success" th:text="${item.totalPresencas}">0</strong></div></div>
                                                             <div class="col-4"><div class="p-2 bg-light border rounded"><small class="text-danger">Faltas</small><br><strong class="text-danger" th:text="${item.totalFaltas}">0</strong></div></div>
                                                         </div>
                                                         <hr>
-                                                        <h6 class="fw-bold mb-2 text-secondary small">Últimos Registros</h6>
                                                         <div style="max-height: 150px; overflow-y: auto;">
                                                             <ul class="list-group list-group-flush small">
                                                                 <li class="list-group-item" th:each="hist : ${item.historicoResumido}">
                                                                     <i class="bi bi-caret-right-fill text-muted"></i> <span th:text="${hist}">Reg</span>
-                                                                </li>
-                                                                <li class="list-group-item text-muted" th:if="${#lists.isEmpty(item.historicoResumido)}">
-                                                                    Sem registros recentes.
                                                                 </li>
                                                             </ul>
                                                         </div>
