@@ -42,32 +42,37 @@ public class FrequenciaController {
             Model model,
             Authentication authentication) {
 
-        // 1. Identificar usuário e permissões
-        String emailUsuario = authentication.getName();
-        boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        try {
+            // 1. Identificar usuário e permissões
+            String emailUsuario = authentication.getName();
+            boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
 
-        // 2. Buscar turmas permitidas
-        List<Turma> turmasDisponiveis = obterTurmasPorPermissao(emailUsuario, isAdmin);
-        model.addAttribute("listaTurmas", turmasDisponiveis);
-        model.addAttribute("dataHoje", LocalDate.now());
+            // 2. Buscar turmas permitidas e colocar no Model
+            List<Turma> turmasDisponiveis = obterTurmasPorPermissao(emailUsuario, isAdmin);
+            model.addAttribute("listaTurmas", turmasDisponiveis);
+            model.addAttribute("dataHoje", LocalDate.now());
 
-        // 3. Se escolheu uma turma, validar e carregar
-        if (turmaId != null) {
-            Optional<Turma> turmaOpt = turmaRepository.findById(turmaId);
+            // 3. Se escolheu uma turma, validar e carregar dados dos alunos
+            if (turmaId != null) {
+                Optional<Turma> turmaOpt = turmaRepository.findById(turmaId);
 
-            if (turmaOpt.isPresent()) {
-                Turma turmaSelecionada = turmaOpt.get();
+                if (turmaOpt.isPresent()) {
+                    Turma turmaSelecionada = turmaOpt.get();
 
-                // SEGURANÇA: Verifica se o ID da turma está na lista de turmas permitidas do usuário
-                boolean temPermissao = isAdmin || turmasDisponiveis.stream()
-                        .anyMatch(t -> t.getId().equals(turmaSelecionada.getId()));
+                    // Verifica se o usuário tem permissão para esta turma específica
+                    boolean temPermissao = isAdmin || turmasDisponiveis.stream()
+                            .anyMatch(t -> t.getId().equals(turmaSelecionada.getId()));
 
-                if (temPermissao) {
-                    carregarDadosDaChamada(model, turmaSelecionada);
-                } else {
-                    return "redirect:/frequencia?erro=acesso_negado";
+                    if (temPermissao) {
+                        carregarDadosDaChamada(model, turmaSelecionada);
+                    } else {
+                        model.addAttribute("mensagemErro", "Você não tem permissão para acessar esta turma.");
+                    }
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("mensagemErro", "Erro ao carregar página: " + e.getMessage());
         }
 
         return "chamada";
@@ -81,33 +86,39 @@ public class FrequenciaController {
             HttpServletRequest request,
             RedirectAttributes redirectAttributes
     ) {
-        Turma turma = turmaRepository.findById(turmaId)
-                .orElseThrow(() -> new IllegalArgumentException("Turma não encontrada"));
+        try {
+            Turma turma = turmaRepository.findById(turmaId)
+                    .orElseThrow(() -> new IllegalArgumentException("Turma não encontrada"));
 
-        List<Inscrito> alunos = inscritoRepository.findByTurma(turma);
-        boolean salvouAlgo = false;
+            List<Inscrito> alunos = inscritoRepository.findByTurma(turma);
+            boolean salvouAlgo = false;
 
-        for (Inscrito aluno : alunos) {
-            String status = request.getParameter("presenca_" + aluno.getId());
-            String obs = request.getParameter("obs_" + aluno.getId());
+            for (Inscrito aluno : alunos) {
+                // Pega os dados do formulário (Radio Button + Campo de Texto)
+                String status = request.getParameter("presenca_" + aluno.getId());
+                String obs = request.getParameter("obs_" + aluno.getId());
 
-            if (status != null && !status.isEmpty()) {
-                Frequencia f = new Frequencia();
-                f.setTurma(turma);
-                f.setInscrito(aluno);
-                f.setDataAula(dataAula);
-                f.setStatus(status);
-                f.setObservacao(obs);
+                if (status != null && !status.isEmpty()) {
+                    Frequencia f = new Frequencia();
+                    f.setTurma(turma);
+                    f.setInscrito(aluno);
+                    f.setDataAula(dataAula);
+                    f.setStatus(status);
+                    f.setObservacao(obs);
 
-                frequenciaRepository.save(f);
-                salvouAlgo = true;
+                    frequenciaRepository.save(f);
+                    salvouAlgo = true;
+                }
             }
-        }
 
-        if (salvouAlgo) {
-            redirectAttributes.addFlashAttribute("mensagemSucesso", " Chamada realizada com sucesso!");
-        } else {
-            redirectAttributes.addFlashAttribute("mensagemErro", "⚠ Nenhuma presença marcada.");
+            if (salvouAlgo) {
+                redirectAttributes.addFlashAttribute("mensagemSucesso", "Chamada realizada com sucesso!");
+            } else {
+                redirectAttributes.addFlashAttribute("mensagemErro", "Nenhuma presença foi marcada.");
+            }
+
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("mensagemErro", "Erro ao salvar: " + e.getMessage());
         }
 
         return "redirect:/frequencia?turmaId=" + turmaId;
@@ -128,38 +139,49 @@ public class FrequenciaController {
         List<Inscrito> alunosBanco = inscritoRepository.findByTurma(turma);
         List<DadosAlunoChamada> listaComStats = new ArrayList<>();
 
-        for (Inscrito aluno : alunosBanco) {
-            long totalAulas = frequenciaRepository.countByInscritoAndTurma(aluno, turma);
-            long presencas = frequenciaRepository.countByInscritoAndTurmaAndStatus(aluno, turma, "P");
+        if (alunosBanco != null) {
+            for (Inscrito aluno : alunosBanco) {
+                try {
+                    // Consultas ao banco para contar presenças e totais
+                    long totalAulas = frequenciaRepository.countByInscritoAndTurma(aluno, turma);
+                    long presencas = frequenciaRepository.countByInscritoAndTurmaAndStatus(aluno, turma, "P");
 
-            List<String> historico = new ArrayList<>();
-            List<Frequencia> ultimas = frequenciaRepository.findTop5ByInscritoOrderByDataAulaDesc(aluno);
-            DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM");
+                    // Busca histórico das últimas 5 aulas
+                    List<String> historico = new ArrayList<>();
+                    try {
+                        List<Frequencia> ultimas = frequenciaRepository.findTop5ByInscritoOrderByDataAulaDesc(aluno);
+                        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM");
 
-            for (Frequencia f : ultimas) {
-                // Filtra apenas desta turma
-                if (f.getTurma().getId().equals(turma.getId())) {
-                    String st = switch (f.getStatus()) {
-                        case "P" -> "Presente";
-                        case "F" -> "Falta";
-                        default -> "Justif.";
-                    };
-                    historico.add(f.getDataAula().format(fmt) + " - " + st);
+                        for (Frequencia f : ultimas) {
+                            // Garante que a frequência é desta turma
+                            if (f.getTurma() != null && f.getTurma().getId().equals(turma.getId())) {
+                                String st = "P".equals(f.getStatus()) ? "Presente" : ("F".equals(f.getStatus()) ? "Falta" : "Justif.");
+                                historico.add(f.getDataAula().format(fmt) + " - " + st);
+                            }
+                        }
+                    } catch (Exception ex) {
+                        // Ignora erro no histórico para não travar a lista principal
+                    }
+
+                    // Cria o objeto DTO com todos os cálculos
+                    listaComStats.add(new DadosAlunoChamada(aluno, totalAulas, presencas, historico));
+
+                } catch (Exception e) {
+                    // Erro ignorado para não travar a lista
                 }
             }
-            listaComStats.add(new DadosAlunoChamada(aluno, totalAulas, presencas, historico));
         }
 
         model.addAttribute("turmaSelecionada", turma);
         model.addAttribute("alunosStats", listaComStats);
     }
 
-    // --- DTO ---
+    // --- DTO (CLASSE INTERNA COM AS CORREÇÕES) ---
     public static class DadosAlunoChamada {
         private final Inscrito aluno;
         private final long totalAulas;
         private final long presencas;
-        private final long totalFaltas;
+        private final long totalFaltas; // Adicionado de volta!
         private final int porcentagem;
         private final String cor;
         private final List<String> historicoResumido;
@@ -169,26 +191,34 @@ public class FrequenciaController {
             this.totalAulas = totalAulas;
             this.presencas = presencas;
             this.historicoResumido = historico;
-            this.totalFaltas = totalAulas - presencas;
+
+            // CÁLCULO DAS FALTAS (Era isso que faltava!)
+            this.totalFaltas = (totalAulas >= presencas) ? (totalAulas - presencas) : 0;
 
             if (totalAulas == 0) {
                 this.porcentagem = 100;
                 this.cor = "success";
             } else {
                 this.porcentagem = (int) ((presencas * 100) / totalAulas);
+
                 if (this.porcentagem < 70) this.cor = "danger";
                 else if (this.porcentagem < 80) this.cor = "warning";
                 else this.cor = "success";
             }
         }
 
+        // GETTERS OBRIGATÓRIOS PARA O THYMELEAF
         public Inscrito getAluno() { return aluno; }
         public long getTotalAulas() { return totalAulas; }
-        public long getPresencas() { return presencas; }
+
+        // Importante: O Thymeleaf acessa "totalPresencas" através deste método
+        public long getTotalPresencas() { return presencas; }
+
+        // Importante: O Thymeleaf acessa "totalFaltas" através deste método
         public long getTotalFaltas() { return totalFaltas; }
+
         public int getPorcentagem() { return porcentagem; }
         public String getCor() { return cor; }
         public List<String> getHistoricoResumido() { return historicoResumido; }
-        public long getTotalPresencas() { return presencas; }
     }
 }
