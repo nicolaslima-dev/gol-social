@@ -18,10 +18,18 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // AQUI ESTÁ A CORREÇÃO: Adicionei "/img/**"
+                        // LIBERA ARQUIVOS ESTÁTICOS
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/img/**", "/webjars/**").permitAll()
+
+                        // LIBERA AS ROTAS DE AUTENTICAÇÃO
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/login").permitAll()
+
+                        // BLOQUEIOS POR PERFIL
                         .requestMatchers("/funcionarios/**").hasRole("ADMIN")
                         .requestMatchers("/frequencia/**").hasAnyRole("ADMIN", "PROFESSOR")
+
+                        // RESTO BLOQUEADO
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

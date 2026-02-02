@@ -3,90 +3,33 @@
 <head th:fragment="cabecalho">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Gol Social - Gestão</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-
     <style>
-        /* --- PALETA DE CORES (Baseada na leitura #5F1B58) --- */
         :root {
             --cor-principal: #5F1B58;
             --cor-hover: #4a1544;
             --cor-texto-menu: #f8eaf6;
             --cor-destaque: #f1c40f;
         }
-
-        .bg-brand {
-            background-color: var(--cor-principal) !important;
-            color: white;
-        }
-
-        /* Botões padronizados com a cor do projeto */
-        .btn-primary {
-            background-color: var(--cor-principal);
-            border-color: var(--cor-principal);
-        }
-        .btn-primary:hover {
-            background-color: var(--cor-hover);
-            border-color: var(--cor-hover);
-        }
-
-        /* Estilos de Tabela Padrão */
-        .table-header-brand {
-            background-color: var(--cor-principal) !important;
-            color: white !important;
-        }
-
-        /* --- SIDEBAR (Desktop) --- */
+        .bg-brand { background-color: var(--cor-principal) !important; color: white; }
+        .btn-primary { background-color: var(--cor-principal); border-color: var(--cor-principal); }
+        .btn-primary:hover { background-color: var(--cor-hover); border-color: var(--cor-hover); }
         .sidebar {
-            height: 100vh;
-            background-color: var(--cor-principal);
-            color: white;
-            padding-top: 20px;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            border-right: none;
+            height: 100vh; background-color: var(--cor-principal); color: white;
+            padding-top: 20px; position: sticky; top: 0; z-index: 1000;
         }
-
         .sidebar a {
-            color: var(--cor-texto-menu);
-            text-decoration: none;
-            display: block;
-            padding: 10px 20px;
-            font-size: 1.1rem;
-            transition: all 0.2s ease-in-out;
+            color: var(--cor-texto-menu); text-decoration: none; display: block;
+            padding: 10px 20px; font-size: 1.1rem; transition: all 0.2s ease-in-out;
         }
-
         .sidebar a:hover {
-            background-color: var(--cor-hover);
-            color: white;
-            padding-left: 25px;
+            background-color: var(--cor-hover); color: white; padding-left: 25px;
             border-left: 4px solid var(--cor-destaque);
         }
-
         .sidebar i { margin-right: 10px; color: var(--cor-destaque); }
-
-        /* --- LOGO --- */
-        .logo-area { text-align: center; margin-bottom: 30px; }
-
-        .logo-img {
-            max-width: 100%;
-            height: auto;
-        }
-
-        /* --- NAVBAR (Mobile) --- */
-        .navbar-mobile {
-            position: sticky;
-            top: 0;
-            z-index: 1030;
-            margin-bottom: 20px;
-            background-color: var(--cor-principal) !important;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
-
+        .navbar-mobile { background-color: var(--cor-principal) !important; }
         .menu-mobile-dropdown { background-color: var(--cor-hover); }
     </style>
 </head>
@@ -97,20 +40,17 @@
     <nav class="navbar navbar-dark d-md-none col-12 navbar-mobile">
         <div class="container-fluid">
             <a class="navbar-brand" href="/">
+                <span th:if="${@environment.getProperty('spring.profiles.active') == 'dev'}">GOL SOCIAL</span>
                 <img th:src="@{/img/logo_gol_social.jpeg}" alt="Gol Social" height="50" class="d-inline-block align-text-top">
             </a>
-
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuCelular">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
             <div class="collapse navbar-collapse mt-3" id="menuCelular">
                 <div class="p-3 rounded shadow menu-mobile-dropdown">
                     <p class="text-white-50 small mb-2" sec:authentication="name">Usuário</p>
-
                     <a href="/" class="nav-link text-white"><i class="bi bi-speedometer2"></i> Dashboard</a>
                     <a href="/inscritos" class="nav-link text-white"><i class="bi bi-people-fill"></i> Beneficiários</a>
-
                     <a href="/turmas" class="nav-link text-white"><i class="bi bi-easel-fill"></i> Gestão de Turmas</a>
 
                     <a href="/frequencia" class="nav-link text-white" sec:authorize="hasAnyRole('ADMIN', 'PROFESSOR')">
@@ -119,9 +59,12 @@
                     <a href="/atividades" class="nav-link text-white" sec:authorize="hasAnyRole('ADMIN', 'PROFESSOR')">
                         <i class="bi bi-journal-text"></i> Diário de Aulas
                     </a>
-
-                    <a href="/funcionarios" class="nav-link text-white" sec:authorize="hasRole('ADMIN')">
+                    <a href="/funcionarios" class="nav-link text-white" sec:authorize="hasAnyRole('ADMIN', 'PROFESSOR')">
                         <i class="bi bi-person-badge"></i> Funcionários
+                    </a>
+
+                    <a href="/configuracoes" class="nav-link text-warning" sec:authorize="hasRole('ADMIN')">
+                        <i class="bi bi-gear"></i> Configurações
                     </a>
 
                     <div class="border-top border-secondary my-2"></div>
@@ -132,28 +75,29 @@
     </nav>
 
     <div class="col-md-2 sidebar d-none d-md-block">
-        <div class="logo-area px-3">
-            <img th:src="@{/img/logo_gol_social.jpeg}" alt="Logo Gol Social" class="logo-img mb-2">
-            <p class="small" style="color: var(--cor-texto-menu);" sec:authentication="name">Usuário</p>
+        <div class="logo-area px-3 text-center mb-4">
+            <img th:src="@{/img/logo_gol_social.jpeg}" alt="Logo" class="img-fluid mb-2" style="max-height: 80px;">
+            <p class="small text-white-50" sec:authentication="name">Usuário</p>
         </div>
 
         <a href="/"><i class="bi bi-speedometer2"></i> Dashboard</a>
         <a href="/inscritos"><i class="bi bi-people-fill"></i> Beneficiários</a>
-
         <a href="/turmas"><i class="bi bi-easel-fill"></i> Turmas</a>
 
         <a href="/frequencia" sec:authorize="hasAnyRole('ADMIN', 'PROFESSOR')"><i class="bi bi-calendar-check"></i> Frequência</a>
         <a href="/atividades" sec:authorize="hasAnyRole('ADMIN', 'PROFESSOR')"><i class="bi bi-journal-text"></i> Diário</a>
-
-        <a href="/funcionarios" sec:authorize="hasRole('ADMIN')"><i class="bi bi-person-badge"></i> Funcionários</a>
+        <a href="/funcionarios" sec:authorize="hasAnyRole('ADMIN', 'PROFESSOR')"><i class="bi bi-person-badge"></i> Funcionários</a>
 
         <hr style="border-color: var(--cor-texto-menu);">
-        <a href="/configuracoes" style="color: var(--cor-texto-menu);"><i class="bi bi-gear"></i> Configurações</a>
-        <a th:href="@{/logout}" class="text-danger"><i class="bi bi-box-arrow-left"></i> Sair</a>
+
+        <a href="/configuracoes" sec:authorize="hasRole('ADMIN')" style="color: #ffda6a;">
+            <i class="bi bi-gear"></i> Configurações
+        </a>
+
+        <a th:href="@{/logout}" class="text-danger mt-3"><i class="bi bi-box-arrow-left"></i> Sair</a>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 </th:block>
 
 </body>

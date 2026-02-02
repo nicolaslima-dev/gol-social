@@ -1,11 +1,11 @@
 package com.sistema.gestao.config;
 
+import com.sistema.gestao.entity.Funcionario; // Mudou de Usuario para Funcionario
 import com.sistema.gestao.entity.Inscrito;
 import com.sistema.gestao.entity.Instituicao;
-import com.sistema.gestao.entity.Usuario;
+import com.sistema.gestao.repository.FuncionarioRepository; // Repositorio novo
 import com.sistema.gestao.repository.InscritoRepository;
 import com.sistema.gestao.repository.InstituicaoRepository;
-import com.sistema.gestao.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +18,7 @@ import java.util.Random;
 public class CargaInicial implements CommandLineRunner {
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    private FuncionarioRepository funcionarioRepository; // Agora usamos Funcionário
 
     @Autowired
     private InscritoRepository inscritoRepository;
@@ -32,11 +32,44 @@ public class CargaInicial implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        if (usuarioRepository.findByLogin("admin").isEmpty()) {
-            criarUsuario("admin", "123456", "ADMIN");
-            criarUsuario("prof", "123456", "PROFESSOR");
+        // --- 1. CRIAR O ADMINISTRADOR (Para você logar agora) ---
+        if (funcionarioRepository.findByEmail("admin@golsocial.com.br").isEmpty()) {
+            Funcionario admin = new Funcionario();
+            admin.setNomeCompleto("Administrador Geral");
+            admin.setCpf("000.000.000-00");
+            admin.setEmail("admin@golsocial.com.br");
+            admin.setDataNascimento(LocalDate.of(1980, 1, 1));
+            // A senha "123456" agora é salva CRIPTOGRAFADA
+            admin.setSenha(passwordEncoder.encode("123456"));
+            admin.setPerfil("ADMIN");
+            admin.setCargo("Gestor");
+            admin.setAtivo(true);
+
+            funcionarioRepository.save(admin);
+            System.out.println(">>> ADMIN CRIADO: admin@golsocial.com.br / 123456");
         }
 
+        // --- 2. CRIAR USUÁRIO PARA TESTAR O "PRIMEIRO ACESSO" ---
+        // Altere o email abaixo para o SEU email real se quiser receber o código de verdade
+        if (funcionarioRepository.findByEmail("teste@golsocial.com.br").isEmpty()) {
+            Funcionario novato = new Funcionario();
+            novato.setNomeCompleto("Professor Teste Primeiro Acesso");
+            novato.setCpf("111.111.111-11");
+            novato.setEmail("nicolassilvap@gamil.com"); // <--- Coloque seu e-mail aqui para testar
+            novato.setDataNascimento(LocalDate.of(1995, 5, 20));
+
+            // IMPORTANTE: Senha NULA para forçar o fluxo de "Primeiro Acesso"
+            novato.setSenha(null);
+
+            novato.setPerfil("PROFESSOR");
+            novato.setCargo("Treinador");
+            novato.setAtivo(true);
+
+            funcionarioRepository.save(novato);
+            System.out.println(">>> USUÁRIO TESTE CRIADO (SEM SENHA). CPF: 111.111.111-11");
+        }
+
+        // --- 3. DADOS DA INSTITUIÇÃO (Mantido do seu código) ---
         if (instituicaoRepository.count() == 0) {
             Instituicao inst = new Instituicao();
             inst.setNomeProjeto("PROJETO GOL SOCIAL");
@@ -46,8 +79,8 @@ public class CargaInicial implements CommandLineRunner {
             instituicaoRepository.save(inst);
         }
 
+        // --- 4. LISTA DE ALUNOS (Mantido do seu código) ---
         if (inscritoRepository.count() == 0) {
-            // Agora passando o sexo (M/F) para evitar o erro de validação
             criarAluno("João Silva", "111.111.111-11", "joao@email.com", "(21) 99888-1111", "Pendente RG", "Masculino");
             criarAluno("Pedro Santos", "222.222.222-22", "pedro@email.com", "(21) 98777-2222", null, "Masculino");
             criarAluno("Julia Costa", "333.333.333-33", "julia@email.com", "(21) 99666-3333", "Foto pendente", "Feminino");
@@ -66,41 +99,30 @@ public class CargaInicial implements CommandLineRunner {
         }
     }
 
-    private void criarUsuario(String login, String senha, String perfil) {
-        Usuario u = new Usuario();
-        u.setLogin(login);
-        u.setSenha(passwordEncoder.encode(senha));
-        u.setPerfil(perfil);
-        usuarioRepository.save(u);
-    }
-
-    // Assinatura do método atualizada para receber String sexo
+    // Método auxiliar para criar alunos (Mantido)
     private void criarAluno(String nome, String cpf, String email, String telefone, String obs, String sexo) {
         Inscrito i = new Inscrito();
         i.setNomeCompleto(nome);
         i.setCpf(cpf);
         i.setEmail(email);
         i.setTelefone(telefone);
-
-        // A Correção Principal: Setando o sexo
         i.setSexo(sexo);
 
-        // Dados genéricos
         i.setEndereco("Rua dos Alunos, S/N");
         i.setBairro("Centro");
         i.setCidade("Rio de Janeiro");
         i.setNomeResponsavel("Responsável pelo " + nome.split(" ")[0]);
-        i.setCpfResponsavel(cpf); // Usando o mesmo CPF para evitar null, se necessário
+        i.setCpfResponsavel(cpf);
 
         Random rand = new Random();
         int ano = 2010 + rand.nextInt(5);
         int mes = 1 + rand.nextInt(12);
         int dia = 1 + rand.nextInt(28);
         i.setDataNascimento(LocalDate.of(ano, mes, dia));
-        i.setDataPreenchimento(LocalDate.now()); // Data de cadastro
+        i.setDataPreenchimento(LocalDate.now());
 
         i.setObservacoes(obs);
-        i.setFichaAnexada(true); // Evitar null
+        i.setFichaAnexada(true);
         i.setAtivo(true);
         inscritoRepository.save(i);
     }

@@ -3,15 +3,12 @@
 <head th:replace="~{layout :: cabecalho}"></head>
 
 <style>
-    /* Esconde o checkbox padrão */
-    .card-input-element {
-        display: none;
-    }
+    /* Estilos do Checkbox de Turma */
+    .card-input-element { display: none; }
 
-    /* Estilo base do card */
     .card-input {
         transition: all 0.2s ease-in-out;
-        border: 2px solid #dee2e6; /* Borda cinza suave padrão */
+        border: 2px solid #dee2e6;
         cursor: pointer;
         position: relative;
     }
@@ -22,15 +19,12 @@
         border-color: #adb5bd;
     }
 
-    /* --- A CORREÇÃO ESTÁ AQUI (USANDO ~ EM VEZ DE +) --- */
-    /* Quando marcado, muda a cor da borda e fundo do card irmão */
     .card-input-element:checked ~ .card-input {
         border-color: var(--cor-principal);
         background-color: rgba(95, 27, 88, 0.04);
         box-shadow: 0 4px 6px rgba(95, 27, 88, 0.1);
     }
 
-    /* Ícone de check */
     .check-icon {
         display: none;
         color: var(--cor-principal);
@@ -38,13 +32,11 @@
         transition: transform 0.2s;
     }
 
-    /* Mostra o ícone quando selecionado */
     .card-input-element:checked ~ .card-input .check-icon {
         display: block;
         transform: scale(1.1);
     }
 
-    /* Badge de vagas */
     .badge-vagas {
         background-color: #f8f9fa;
         color: #6c757d;
@@ -60,6 +52,11 @@
 
         <main class="col-md-10 ms-sm-auto px-md-4 py-4 bg-light" style="min-height: 100vh;">
 
+            <div th:if="${mensagemErro}" class="alert alert-danger alert-dismissible fade show">
+                <i class="bi bi-exclamation-triangle-fill"></i> <span th:text="${mensagemErro}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
             <div class="card shadow-sm border-0 mt-4">
                 <div class="card-header text-white py-3" style="background-color: var(--cor-principal);">
                     <h5 class="m-0"><i class="bi bi-person-badge-fill"></i> Cadastro de Funcionário</h5>
@@ -72,6 +69,33 @@
                         <div class="mb-3">
                             <label class="form-label fw-bold"><i class="bi bi-person"></i> Nome Completo</label>
                             <input type="text" th:field="*{nomeCompleto}" class="form-control" placeholder="Ex: João da Silva" required>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold"><i class="bi bi-card-text"></i> CPF</label>
+                                <input type="text" th:field="*{cpf}" class="form-control"
+                                       placeholder="000.000.000-00"
+                                       maxlength="14"
+                                       oninput="mascaraCPF(this)"
+                                       required>
+                                <small class="text-muted" style="font-size: 0.8em;">Somente números</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold"><i class="bi bi-calendar-event"></i> Data de Nascimento</label>
+                                <input type="date" th:field="*{dataNascimento}" class="form-control" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold"><i class="bi bi-envelope"></i> E-mail</label>
+                                <input type="email" th:field="*{email}" class="form-control" placeholder="joao@exemplo.com" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold"><i class="bi bi-phone"></i> Telefone</label>
+                                <input type="text" th:field="*{telefone}" class="form-control" placeholder="(00) 00000-0000">
+                            </div>
                         </div>
 
                         <div class="row mb-3">
@@ -91,7 +115,6 @@
                             <label class="form-label fw-bold d-block mb-3" style="color: var(--cor-principal); font-size: 1.1rem;">
                                 <i class="bi bi-easel"></i> Vincular Turmas
                             </label>
-                            <p class="text-muted small mb-3">Selecione abaixo as turmas que este funcionário irá gerenciar:</p>
 
                             <div th:if="${#lists.isEmpty(listaTurmas)}" class="alert alert-warning">
                                 <i class="bi bi-exclamation-triangle"></i> Nenhuma turma cadastrada no sistema.
@@ -100,35 +123,24 @@
                             <div class="row g-3">
                                 <div class="col-md-6 col-lg-4" th:each="t : ${listaTurmas}">
                                     <label class="w-100 position-relative">
-
                                         <input type="checkbox" th:field="*{turmas}" th:value="${t.id}" class="card-input-element" />
 
                                         <div class="card card-body p-3 h-100 card-input rounded-3">
                                             <div class="d-flex justify-content-between align-items-start">
                                                 <div>
                                                     <h6 class="fw-bold mb-1" style="color: var(--cor-principal);" th:text="${t.modalidade}">Futsal</h6>
-
                                                     <small class="text-muted d-block fw-bold" th:text="${t.nucleo}">Núcleo 01</small>
-
                                                     <div class="mt-1">
                                                         <span class="badge bg-light text-dark border" th:text="${t.nome}">Sub-15</span>
                                                     </div>
                                                 </div>
-
                                                 <i class="bi bi-check-circle-fill check-icon"></i>
                                             </div>
-
                                             <hr class="my-2" style="opacity: 0.1">
-
                                             <div class="d-flex justify-content-between align-items-center mt-auto">
                                                 <div class="small text-secondary">
-                                                    <i class="bi bi-clock me-1"></i> <span th:text="${t.horario}">08:00</span><br>
-                                                    <i class="bi bi-calendar-week me-1"></i> <span th:text="${t.diasSemana}">Seg/Qua</span>
+                                                    <i class="bi bi-clock me-1"></i> <span th:text="${t.horario}">08:00</span>
                                                 </div>
-
-                                                <span class="badge badge-vagas rounded-pill">
-                                                    <i class="bi bi-people-fill me-1"></i> <span th:text="${t.capacidade}">20</span>
-                                                </span>
                                             </div>
                                         </div>
                                     </label>
@@ -153,5 +165,22 @@
         </main>
     </div>
 </div>
+
+<script>
+    function mascaraCPF(i) {
+        var v = i.value;
+
+        // Remove tudo que não for número para não bugar
+        if(isNaN(v[v.length-1])){
+           i.value = v.substring(0, v.length-1);
+           return;
+        }
+
+        i.setAttribute("maxlength", "14");
+        if (v.length == 3 || v.length == 7) i.value += ".";
+        if (v.length == 11) i.value += "-";
+    }
+</script>
+
 </body>
 </html>

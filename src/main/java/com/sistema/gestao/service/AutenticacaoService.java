@@ -1,7 +1,7 @@
 package com.sistema.gestao.service;
 
-import com.sistema.gestao.entity.Usuario;
-import com.sistema.gestao.repository.UsuarioRepository;
+import com.sistema.gestao.entity.Funcionario;
+import com.sistema.gestao.repository.FuncionarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,19 +13,23 @@ import org.springframework.stereotype.Service;
 public class AutenticacaoService implements UserDetailsService {
 
     @Autowired
-    private UsuarioRepository repository;
+    private FuncionarioRepository repository;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // 1. Busca no banco
-        Usuario usuario = repository.findByLogin(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + username));
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        // Busca agora na tabela Funcionario
+        Funcionario funcionario = repository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado: " + email));
 
-        // 2. Retorna um objeto que o Spring Security entende
+        // Impede login se não tiver senha definida (obriga a fazer Primeiro Acesso)
+        if (funcionario.getSenha() == null || funcionario.getSenha().isEmpty()) {
+            throw new UsernameNotFoundException("Cadastro incompleto. Realize o Primeiro Acesso.");
+        }
+
         return User.builder()
-                .username(usuario.getLogin())
-                .password(usuario.getSenha())
-                .roles(usuario.getPerfil()) // Define se é ADMIN, PROFESSOR, etc.
+                .username(funcionario.getEmail())
+                .password(funcionario.getSenha())
+                .roles(funcionario.getPerfil() != null ? funcionario.getPerfil() : "USER")
                 .build();
     }
 }

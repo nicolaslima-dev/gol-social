@@ -47,7 +47,7 @@ public class ConfiguracaoController {
         return "configuracoes";
     }
 
-    // --- USUÁRIOS ---
+    // --- USUÁRIOS (MÉTODO ANTIGO) ---
     @PostMapping("/usuarios/criar")
     public String criarUsuario(@RequestParam String login, @RequestParam String senha, @RequestParam String perfil) {
         if (usuarioRepository.findByLogin(login).isEmpty()) {

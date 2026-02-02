@@ -3,6 +3,7 @@ package com.sistema.gestao.entity;
 import jakarta.persistence.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -14,18 +15,27 @@ public class Funcionario {
     private Long id;
 
     private String nomeCompleto;
+
+    @Column(unique = true)
     private String cpf;
+
+    @Column(unique = true)
     private String email;
+
     private String senha;
-
-    // CAMPO ADICIONADO PARA CORRIGIR O ERRO NO CONTROLLER
     private String telefone;
-
-    private String perfil; // ADMIN ou USER
-    private String cargo;  // Ex: Treinador, Coordenador
+    private String perfil;
+    private String cargo;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate dataAdmissao;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private LocalDate dataNascimento;
+
+    // --- NOVOS CAMPOS PARA RECUPERAÇÃO DE SENHA ---
+    private String tokenRecuperacao;
+    private LocalDateTime tokenValidade;
 
     private boolean ativo = true;
 
@@ -54,7 +64,6 @@ public class Funcionario {
     public String getSenha() { return senha; }
     public void setSenha(String senha) { this.senha = senha; }
 
-    // GETTER E SETTER DO TELEFONE (CORREÇÃO DO ERRO)
     public String getTelefone() { return telefone; }
     public void setTelefone(String telefone) { this.telefone = telefone; }
 
@@ -66,6 +75,15 @@ public class Funcionario {
 
     public LocalDate getDataAdmissao() { return dataAdmissao; }
     public void setDataAdmissao(LocalDate dataAdmissao) { this.dataAdmissao = dataAdmissao; }
+
+    public LocalDate getDataNascimento() { return dataNascimento; }
+    public void setDataNascimento(LocalDate dataNascimento) { this.dataNascimento = dataNascimento; }
+
+    public String getTokenRecuperacao() { return tokenRecuperacao; }
+    public void setTokenRecuperacao(String tokenRecuperacao) { this.tokenRecuperacao = tokenRecuperacao; }
+
+    public LocalDateTime getTokenValidade() { return tokenValidade; }
+    public void setTokenValidade(LocalDateTime tokenValidade) { this.tokenValidade = tokenValidade; }
 
     public boolean isAtivo() { return ativo; }
     public void setAtivo(boolean ativo) { this.ativo = ativo; }
