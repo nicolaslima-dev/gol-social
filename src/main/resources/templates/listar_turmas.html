@@ -55,6 +55,10 @@
                                 </td>
 
                                 <td class="text-end pe-4">
+                                    <a th:href="@{/turmas/pdf/{id}(id=${t.id})}" class="btn btn-sm btn-outline-danger me-1" title="Lista de Presença (PDF)" target="_blank">
+                                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                                    </a>
+
                                     <a th:href="@{/turmas/editar/{id}(id=${t.id})}" class="btn btn-sm btn-outline-primary" title="Editar">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
