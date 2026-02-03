@@ -1,233 +1,157 @@
 <!DOCTYPE html>
-
 <html xmlns:th="http://www.thymeleaf.org">
-
 <head>
-
     <title>Login - Gol Social</title>
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-
-
     <style>
-
         :root {
-
-        --cor-principal: #5F1B58;
-
-        --cor-hover: #4a1545;
-
+            --cor-principal: #5F1B58;
+            --cor-hover: #4a1545;
         }
-
-
 
         body {
-
-        background-color: var(--cor-principal);
-
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-
-        min-height: 100vh;
-
+            background-color: var(--cor-principal);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
         }
-
-
 
         .card-login {
-
-        width: 500px;
-
-        max-width: 95vw;
-
-        border: none;
-
-        border-radius: 1rem;
-
+            width: 500px;
+            max-width: 95vw;
+            border: none;
+            border-radius: 1rem;
+            background-color: white; /* Garante fundo branco no card */
         }
-
-
 
         .btn-primary {
-
-        background-color: var(--cor-principal);
-
-        border-color: var(--cor-principal);
-
-        padding: 12px;
-
-        font-weight: bold;
-
-        font-size: 1.1rem;
-
+            background-color: var(--cor-principal);
+            border-color: var(--cor-principal);
+            padding: 12px;
+            font-weight: bold;
+            font-size: 1.1rem;
         }
-
-
 
         .btn-primary:hover {
-
-        background-color: var(--cor-hover);
-
-        border-color: var(--cor-hover);
-
+            background-color: var(--cor-hover);
+            border-color: var(--cor-hover);
         }
-
-
 
         .form-control:focus {
-
-        border-color: var(--cor-principal);
-
-        box-shadow: 0 0 0 0.25rem rgba(95, 27, 88, 0.25);
-
+            border-color: var(--cor-principal);
+            box-shadow: 0 0 0 0.25rem rgba(95, 27, 88, 0.25);
+            z-index: 0; /* Importante para não cobrir o botão do olho */
         }
-
-
 
         .logo-login {
-
-        max-width: 180px;
-
-        border-radius: 15px;
-
-        margin-bottom: 1.5rem;
-
+            max-width: 180px;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
         }
-
-
 
         .links-auxiliares a {
-
-        color: var(--cor-principal);
-
-        text-decoration: none;
-
-        font-size: 0.9rem;
-
+            color: var(--cor-principal);
+            text-decoration: none;
+            font-size: 0.9rem;
         }
-
-
 
         .links-auxiliares a:hover {
-
-        text-decoration: underline;
-
+            text-decoration: underline;
         }
 
+        /* ESTILO NOVO PARA O BOTÃO DO OLHO */
+        .btn-olho {
+            background-color: #f8f9fa; /* Mesma cor do bg-light do bootstrap */
+            border: 1px solid #dee2e6;
+            border-left: none; /* Remove borda dupla com o input */
+            color: #6c757d; /* Cor text-secondary */
+            cursor: pointer;
+            z-index: 10;
+        }
+        .btn-olho:hover {
+            background-color: #e9ecef;
+            color: var(--cor-principal);
+        }
     </style>
-
 </head>
-
 <body class="d-flex align-items-center justify-content-center">
-
-
 
 <div class="card shadow-lg p-4 p-md-5 card-login">
 
-
-
     <div class="text-center">
-
         <img th:src="@{/img/logo_gol_social.jpeg}" alt="Logo Gol Social" class="logo-login shadow-sm">
-
         <h4 class="text-secondary mb-4 fw-light">Acesso ao Sistema</h4>
-
     </div>
-
-
 
     <div th:if="${param.error}" class="alert alert-danger d-flex align-items-center" role="alert">
-
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
-
         <div>Usuário ou senha inválidos.</div>
-
     </div>
-
-
 
     <div th:if="${param.logout}" class="alert alert-success d-flex align-items-center" role="alert">
-
         <i class="bi bi-check-circle-fill me-2"></i>
-
         <div>Você saiu com segurança.</div>
-
     </div>
-
-
 
     <div th:if="${sucesso}" class="alert alert-success d-flex align-items-center" role="alert">
-
         <i class="bi bi-check-lg me-2"></i>
-
         <div th:text="${sucesso}"></div>
-
     </div>
-
-
 
     <form th:action="@{/login}" method="post">
 
-
-
         <div class="mb-3">
-
             <label class="form-label text-muted fw-bold">Login</label>
-
             <div class="input-group">
-
                 <span class="input-group-text bg-light"><i class="bi bi-envelope-fill text-secondary"></i></span>
-
                 <input type="text" name="username" class="form-control form-control-lg" placeholder="Digite seu e-mail" required autofocus>
-
             </div>
-
         </div>
-
-
 
         <div class="mb-4">
-
             <label class="form-label text-muted fw-bold">Senha</label>
-
             <div class="input-group">
-
                 <span class="input-group-text bg-light"><i class="bi bi-lock-fill text-secondary"></i></span>
 
-                <input type="password" name="password" class="form-control form-control-lg" placeholder="Digite sua senha" required>
+                <input type="password" id="passwordInput" name="password" class="form-control form-control-lg" placeholder="Digite sua senha" required>
 
+                <button class="btn btn-olho" type="button" onclick="toggleLoginSenha()">
+                    <i class="bi bi-eye-slash" id="iconLogin"></i>
+                </button>
             </div>
-
         </div>
-
-
 
         <button type="submit" class="btn btn-primary w-100 mb-4 shadow-sm">
-
             ENTRAR
-
         </button>
 
-
-
         <div class="d-flex justify-content-between links-auxiliares mt-2">
-
             <a th:href="@{/auth/recuperar}" class="text-muted"><i class="bi bi-key"></i> Esqueci minha senha</a>
-
             <a th:href="@{/auth/primeiro_acesso}" class="fw-bold">Primeiro acesso? Ativar conta</a>
-
         </div>
-
     </form>
-
 </div>
 
+<script>
+    function toggleLoginSenha() {
+        const input = document.getElementById('passwordInput');
+        const icon = document.getElementById('iconLogin');
 
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("bi-eye-slash");
+            icon.classList.add("bi-eye");
+            icon.style.color = "var(--cor-principal)"; // Fica roxo quando visível
+        } else {
+            input.type = "password";
+            icon.classList.remove("bi-eye");
+            icon.classList.add("bi-eye-slash");
+            icon.style.color = ""; // Volta a cor original
+        }
+    }
+</script>
 
 </body>
-
 </html>

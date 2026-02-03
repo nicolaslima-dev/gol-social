@@ -1,7 +1,11 @@
 package com.sistema.gestao.controller;
 
 import com.sistema.gestao.entity.Funcionario;
+import com.sistema.gestao.entity.HistoricoSenha;
+import com.sistema.gestao.entity.Usuario;
 import com.sistema.gestao.repository.FuncionarioRepository;
+import com.sistema.gestao.repository.HistoricoSenhaRepository; // NOVO
+import com.sistema.gestao.repository.UsuarioRepository;
 import com.sistema.gestao.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
@@ -20,15 +25,16 @@ import java.util.Random;
 public class AuthController {
 
     @Autowired private FuncionarioRepository funcionarioRepository;
+    @Autowired private UsuarioRepository usuarioRepository;
+    @Autowired private HistoricoSenhaRepository historicoSenhaRepository; // INJEÇÃO DO HISTÓRICO
     @Autowired private EmailService emailService;
     @Autowired private PasswordEncoder passwordEncoder;
 
     // --- TELAS (GET) ---
 
-    // MUDOU DE TRAÇO (-) PARA UNDERLINE (_) NA URL E NO ARQUIVO
     @GetMapping("/primeiro_acesso")
     public String telaPrimeiroAcesso() {
-        return "auth/primeiro_acesso"; // Busca o arquivo primeiro_acesso.html
+        return "auth/primeiro_acesso";
     }
 
     @GetMapping("/recuperar")
@@ -36,23 +42,21 @@ public class AuthController {
         return "auth/recuperar";
     }
 
-    // MUDOU PARA UNDERLINE (_)
     @GetMapping("/validar_codigo")
     public String telaValidarCodigo() {
-        return "auth/validar_codigo"; // Busca o arquivo validar_codigo.html
+        return "auth/validar_codigo";
     }
 
-    // MUDOU PARA UNDERLINE (_)
     @GetMapping("/nova_senha")
     public String telaNovaSenha(@RequestParam String token, Model model) {
         model.addAttribute("token", token);
-        return "auth/nova_senha"; // Busca o arquivo nova_senha.html
+        return "auth/nova_senha";
     }
 
     // --- AÇÕES (POST) ---
 
-    // 1. PRIMEIRO ACESSO (CPF + DATA)
-    @PostMapping("/validar_primeiro_acesso") // Padronizei para underline aqui também
+    // 1. PRIMEIRO ACESSO
+    @PostMapping("/validar_primeiro_acesso")
     public String validarPrimeiroAcesso(
             @RequestParam String cpf,
             @RequestParam LocalDate dataNascimento,
@@ -62,35 +66,43 @@ public class AuthController {
 
         if (funcOpt.isEmpty()) {
             attributes.addFlashAttribute("erro", "Dados não encontrados. Verifique seu CPF e Data de Nascimento.");
-            return "redirect:/auth/primeiro_acesso"; // Redireciona para a nova URL
+            return "redirect:/auth/primeiro_acesso";
         }
 
         Funcionario funcionario = funcOpt.get();
 
         if (funcionario.getSenha() != null && !funcionario.getSenha().isEmpty()) {
-            attributes.addFlashAttribute("aviso", "Você já possui conta ativa! Use a recuperação de senha abaixo.");
+            attributes.addFlashAttribute("aviso", "Você já possui conta ativa! Use a recuperação de senha.");
             return "redirect:/auth/recuperar";
         }
 
         enviarCodigo(funcionario);
         attributes.addFlashAttribute("sucesso", "Identificado! Código enviado para: " + mascararEmail(funcionario.getEmail()));
-        return "redirect:/auth/validar_codigo"; // Redireciona para a nova URL
+        return "redirect:/auth/validar_codigo";
     }
 
-    // 2. RECUPERAÇÃO (SÓ EMAIL)
-    @PostMapping("/enviar_recuperacao") // Padronizei
-    public String enviarRecuperacao(@RequestParam String email, RedirectAttributes attributes) {
-        Optional<Funcionario> funcOpt = funcionarioRepository.findByEmail(email);
+    // 2. RECUPERAÇÃO DE SENHA RIGOROSA
+    @PostMapping("/enviar_recuperacao")
+    public String enviarRecuperacao(
+            @RequestParam String email,
+            @RequestParam String cpf,
+            @RequestParam LocalDate dataNascimento,
+            RedirectAttributes attributes) {
 
-        if (funcOpt.isPresent()) {
-            enviarCodigo(funcOpt.get());
+        Optional<Funcionario> funcOpt = funcionarioRepository.findByEmailAndCpfAndDataNascimento(email, cpf, dataNascimento);
+
+        if (funcOpt.isEmpty()) {
+            attributes.addFlashAttribute("erro", "Dados inválidos. Verifique se o E-mail, CPF e Data de Nascimento estão corretos.");
+            return "redirect:/auth/recuperar";
         }
-        attributes.addFlashAttribute("sucesso", "Se o e-mail estiver cadastrado, você receberá um código.");
+
+        enviarCodigo(funcOpt.get());
+        attributes.addFlashAttribute("sucesso", "Dados confirmados! O código foi enviado para seu e-mail.");
         return "redirect:/auth/validar_codigo";
     }
 
     // 3. CONFIRMAR CÓDIGO
-    @PostMapping("/confirmar_codigo") // Padronizei
+    @PostMapping("/confirmar_codigo")
     public String confirmarCodigo(@RequestParam String codigo, RedirectAttributes attributes) {
         Optional<Funcionario> funcOpt = funcionarioRepository.findByTokenRecuperacao(codigo);
 
@@ -109,27 +121,71 @@ public class AuthController {
         return "redirect:/auth/nova_senha?token=" + codigo;
     }
 
-    // 4. SALVAR NOVA SENHA
-    @PostMapping("/salvar_senha") // Padronizei
+    // 4. SALVAR NOVA SENHA (COM VALIDAÇÃO DE HISTÓRICO)
+    @PostMapping("/salvar_senha")
     public String salvarSenha(
             @RequestParam String token,
             @RequestParam String senha,
+            @RequestParam String confirmaSenha,
             RedirectAttributes attributes) {
 
-        Optional<Funcionario> funcOpt = funcionarioRepository.findByTokenRecuperacao(token);
+        // A. Valida se as senhas digitadas conferem
+        if (!senha.equals(confirmaSenha)) {
+            attributes.addFlashAttribute("erro", "As senhas não coincidem. Tente novamente.");
+            return "redirect:/auth/nova_senha?token=" + token;
+        }
 
+        Optional<Funcionario> funcOpt = funcionarioRepository.findByTokenRecuperacao(token);
         if (funcOpt.isEmpty()) {
             return "redirect:/auth/login";
         }
 
         Funcionario funcionario = funcOpt.get();
-        funcionario.setSenha(passwordEncoder.encode(senha));
+
+        // B. LÓGICA DE HISTÓRICO DE SENHAS -------------------------
+
+        // 1. Verifica se é igual à senha ATUAL
+        if (funcionario.getSenha() != null && passwordEncoder.matches(senha, funcionario.getSenha())) {
+            attributes.addFlashAttribute("erro", "Você não pode utilizar sua senha atual. Escolha uma nova.");
+            return "redirect:/auth/nova_senha?token=" + token;
+        }
+
+        // 2. Verifica se é igual a alguma senha do HISTÓRICO
+        List<HistoricoSenha> senhasAntigas = historicoSenhaRepository.findByFuncionario(funcionario);
+
+        for (HistoricoSenha historico : senhasAntigas) {
+            if (passwordEncoder.matches(senha, historico.getSenhaHash())) {
+                attributes.addFlashAttribute("erro", "Esta senha já foi utilizada anteriormente. Por segurança, escolha uma senha inédita.");
+                return "redirect:/auth/nova_senha?token=" + token;
+            }
+        }
+
+        // 3. Se passou nas validações, SALVA A SENHA ANTIGA NO HISTÓRICO antes de mudar
+        if (funcionario.getSenha() != null && !funcionario.getSenha().isEmpty()) {
+            HistoricoSenha novaEntradaHistorico = new HistoricoSenha(funcionario.getSenha(), funcionario);
+            historicoSenhaRepository.save(novaEntradaHistorico);
+        }
+        // ----------------------------------------------------------
+
+        String senhaCriptografada = passwordEncoder.encode(senha);
+
+        // Atualiza Funcionário
+        funcionario.setSenha(senhaCriptografada);
         funcionario.setTokenRecuperacao(null);
         funcionario.setTokenValidade(null);
-
         funcionarioRepository.save(funcionario);
 
-        attributes.addFlashAttribute("sucesso", "Senha criada com sucesso! Faça login.");
+        // Atualiza/Cria Usuário de Login
+        Usuario usuario = usuarioRepository.findByLogin(funcionario.getEmail())
+                .orElse(new Usuario());
+        usuario.setLogin(funcionario.getEmail());
+        usuario.setSenha(senhaCriptografada);
+        if (usuario.getPerfil() == null || usuario.getPerfil().isEmpty()) {
+            usuario.setPerfil("PROFESSOR");
+        }
+        usuarioRepository.save(usuario);
+
+        attributes.addFlashAttribute("sucesso", "Senha alterada com sucesso! O histórico foi atualizado.");
         return "redirect:/login";
     }
 
@@ -143,6 +199,7 @@ public class AuthController {
     }
 
     private String mascararEmail(String email) {
+        if (email == null) return "";
         int arroba = email.indexOf("@");
         if(arroba <= 1) return email;
         return email.substring(0, 2) + "***" + email.substring(arroba);

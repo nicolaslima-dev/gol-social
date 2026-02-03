@@ -12,6 +12,7 @@ import com.sistema.gestao.repository.RelatorioMensalRepository;
 import com.sistema.gestao.repository.UsuarioRepository;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,6 +29,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 @Controller
+@PreAuthorize("hasRole('ADMIN')") // BLOQUEIA A CLASSE INTEIRA PARA NÃO-ADMINS
 public class ConfiguracaoController {
 
     @Autowired private UsuarioRepository usuarioRepository;
@@ -47,7 +49,7 @@ public class ConfiguracaoController {
         return "configuracoes";
     }
 
-    // --- USUÁRIOS (MÉTODO ANTIGO) ---
+    // --- USUÁRIOS ---
     @PostMapping("/usuarios/criar")
     public String criarUsuario(@RequestParam String login, @RequestParam String senha, @RequestParam String perfil) {
         if (usuarioRepository.findByLogin(login).isEmpty()) {

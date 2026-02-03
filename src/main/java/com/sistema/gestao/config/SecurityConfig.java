@@ -2,6 +2,7 @@ package com.sistema.gestao.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -11,6 +12,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // Habilita a proteção direta nos Controllers (@PreAuthorize)
 public class SecurityConfig {
 
     @Bean
@@ -18,18 +20,22 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // LIBERA ARQUIVOS ESTÁTICOS
+                        // 1. LIBERA ARQUIVOS ESTÁTICOS (CSS, JS, IMAGENS)
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/img/**", "/webjars/**").permitAll()
 
-                        // LIBERA AS ROTAS DE AUTENTICAÇÃO
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/login").permitAll()
+                        // 2. LIBERA TELA DE LOGIN
+                        .requestMatchers("/auth/**", "/login").permitAll()
 
-                        // BLOQUEIOS POR PERFIL
-                        .requestMatchers("/funcionarios/**").hasRole("ADMIN")
-                        .requestMatchers("/frequencia/**").hasAnyRole("ADMIN", "PROFESSOR")
+                        // 3. REGRAS DE ADMIN (Acesso Exclusivo à Configuração e Backups)
+                        .requestMatchers(
+                                "/configuracoes/**",
+                                "/usuarios/**",
+                                "/instituicao/**",
+                                "/backup/**"
+                        ).hasRole("ADMIN")
 
-                        // RESTO BLOQUEADO
+                        // 4. RESTO DO SISTEMA (Dashboard, Alunos, Turmas, Funcionários, Relatórios)
+                        // Permite acesso para ADMIN e PROFESSOR (qualquer um logado)
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
