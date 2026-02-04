@@ -16,14 +16,15 @@ public class Turma {
     private String horario;
     private String diasSemana;
 
-    // --- ESTES CAMPOS SÃO OBRIGATÓRIOS PARA O SEU HTML NOVO ---
     private String nome;
     private Integer capacidade;
 
     @ManyToMany(mappedBy = "turmas")
     private List<Funcionario> funcionarios = new ArrayList<>();
 
-    @OneToMany(mappedBy = "turma")
+    // --- ALTERADO PARA MANY TO MANY ---
+    // "mappedBy = turmas" refere-se à lista "turmas" dentro de Inscrito
+    @ManyToMany(mappedBy = "turmas")
     private List<Inscrito> inscritos = new ArrayList<>();
 
     // --- GETTERS E SETTERS ---
@@ -53,4 +54,19 @@ public class Turma {
 
     public List<Inscrito> getInscritos() { return inscritos; }
     public void setInscritos(List<Inscrito> inscritos) { this.inscritos = inscritos; }
+
+    // --- NOVOS MÉTODOS DE VAGAS ---
+
+    // Retorna quantos estão inscritos
+    public int getQuantidadeInscritos() {
+        if (inscritos == null) return 0;
+        return inscritos.size();
+    }
+
+    // Calcula vagas restantes (Não é salvo no banco, calculado na hora)
+    public int getVagasRestantes() {
+        if (capacidade == null) return 0; // Ou retornar um valor alto se capacidade for opcional
+        int ocupadas = getQuantidadeInscritos();
+        return Math.max(0, capacidade - ocupadas); // Evita número negativo
+    }
 }

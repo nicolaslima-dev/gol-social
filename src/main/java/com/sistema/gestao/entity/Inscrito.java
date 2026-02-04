@@ -49,12 +49,15 @@ public class Inscrito {
 
     private String email;
 
-    // --- MATRÍCULA (ALTERADO AQUI!) ---
-    // Removemos modalidade, horario e polo (strings) e colocamos o Objeto Turma
-
-    @ManyToOne
-    @JoinColumn(name = "turma_id")
-    private Turma turma;
+    // --- MATRÍCULA (ALTERADO PARA LISTA - MUITOS PARA MUITOS) ---
+    // Agora aceita múltiplas turmas. A limitação de 2 será feita no Service/Controller.
+    @ManyToMany
+    @JoinTable(
+            name = "inscrito_turmas", // Nome da tabela intermediária
+            joinColumns = @JoinColumn(name = "inscrito_id"),
+            inverseJoinColumns = @JoinColumn(name = "turma_id")
+    )
+    private List<Turma> turmas = new ArrayList<>();
 
     private boolean fichaAnexada;
 
@@ -112,9 +115,17 @@ public class Inscrito {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    // GETTER E SETTER DA TURMA (Novo)
-    public Turma getTurma() { return turma; }
-    public void setTurma(Turma turma) { this.turma = turma; }
+    // --- GETTER E SETTER ATUALIZADOS PARA LISTA ---
+    public List<Turma> getTurmas() { return turmas; }
+
+    public void setTurmas(List<Turma> turmas) { this.turmas = turmas; }
+
+    // Método auxiliar para adicionar uma turma individualmente
+    public void adicionarTurma(Turma turma) {
+        if (!this.turmas.contains(turma)) {
+            this.turmas.add(turma);
+        }
+    }
 
     public boolean isFichaAnexada() { return fichaAnexada; }
     public void setFichaAnexada(boolean fichaAnexada) { this.fichaAnexada = fichaAnexada; }

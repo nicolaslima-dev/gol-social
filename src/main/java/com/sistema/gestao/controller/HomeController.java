@@ -2,6 +2,7 @@ package com.sistema.gestao.controller;
 
 import com.sistema.gestao.entity.Frequencia;
 import com.sistema.gestao.entity.Inscrito;
+import com.sistema.gestao.entity.Turma; // Importante importar Turma
 import com.sistema.gestao.repository.AtividadeAulaRepository;
 import com.sistema.gestao.repository.InscritoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,41 +39,44 @@ public class HomeController {
         List<AlertaDTO> listaAlertas = new ArrayList<>();
 
         for (Inscrito aluno : todosAlunos) {
-            // Pula inativos ou alunos sem turma vinculada
-            if (!aluno.isAtivo() || aluno.getTurma() == null) continue;
+            // Pula inativos ou alunos sem NENHUMA turma vinculada
+            if (!aluno.isAtivo() || aluno.getTurmas() == null || aluno.getTurmas().isEmpty()) continue;
 
-            // --- CÁLCULO DE FREQUÊNCIA (Importado do FrequenciaController) ---
             List<Frequencia> historico = aluno.getFrequencias();
 
-            // Filtra apenas aulas da turma atual do aluno
-            long totalAulasTurma = historico.stream()
-                    .filter(f -> f.getTurma() != null && f.getTurma().getId().equals(aluno.getTurma().getId()))
-                    .count();
+            // CORREÇÃO: Agora percorremos TODAS as turmas do aluno
+            for (Turma turma : aluno.getTurmas()) {
 
-            if (totalAulasTurma > 0) {
-                // Conta quantas presenças ("P") ele teve nessa turma
-                long presencas = historico.stream()
-                        .filter(f -> f.getTurma() != null && f.getTurma().getId().equals(aluno.getTurma().getId()))
-                        .filter(f -> "P".equals(f.getStatus()))
+                // Filtra apenas aulas DESTA turma específica
+                long totalAulasTurma = historico.stream()
+                        .filter(f -> f.getTurma() != null && f.getTurma().getId().equals(turma.getId()))
                         .count();
 
-                // Matemática simples: (Presenças / Total) * 100
-                double porcentagem = (double) presencas / totalAulasTurma * 100;
+                if (totalAulasTurma > 0) {
+                    // Conta quantas presenças ("P") ele teve nesta turma
+                    long presencas = historico.stream()
+                            .filter(f -> f.getTurma() != null && f.getTurma().getId().equals(turma.getId()))
+                            .filter(f -> "P".equals(f.getStatus()))
+                            .count();
 
-                // REGRA: Se for menor que 70%, gera o alerta
-                if (porcentagem < 70.0) {
+                    // Matemática simples: (Presenças / Total) * 100
+                    double porcentagem = (double) presencas / totalAulasTurma * 100;
 
-                    // Monta o texto bonito: "Futsal Sub-11 (Núc. 10) - 65% Freq"
-                    String infoTurma = aluno.getTurma().getModalidade() + " " + aluno.getTurma().getNome();
-                    String infoNucleo = "(Núc. " + aluno.getTurma().getNucleo() + ")";
-                    String textoAlerta = String.format("%s %s - %.0f%% Freq", infoTurma, infoNucleo, porcentagem);
+                    // REGRA: Se for menor que 70%, gera o alerta
+                    if (porcentagem < 70.0) {
 
-                    listaAlertas.add(new AlertaDTO(aluno.getNomeCompleto(), textoAlerta, "danger"));
+                        // Monta o texto bonito: "Futsal Sub-11 (Núc. 10) - 65% Freq"
+                        String infoTurma = turma.getModalidade() + " " + turma.getNome();
+                        String infoNucleo = "(Núc. " + turma.getNucleo() + ")";
+                        String textoAlerta = String.format("%s %s - %.0f%% Freq", infoTurma, infoNucleo, porcentagem);
+
+                        listaAlertas.add(new AlertaDTO(aluno.getNomeCompleto(), textoAlerta, "danger"));
+                    }
                 }
             }
 
-            // --- OUTRAS REGRAS (Mantidas) ---
-            // REGRA: Documentos Pendentes
+            // --- OUTRAS REGRAS ---
+            // REGRA: Documentos Pendentes (Essa regra vale para o aluno, independente da turma)
             if (aluno.getObservacoes() != null && aluno.getObservacoes().toLowerCase().contains("pendente")) {
                 listaAlertas.add(new AlertaDTO(aluno.getNomeCompleto(), "Documentação Pendente", "warning"));
             }

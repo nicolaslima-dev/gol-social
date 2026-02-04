@@ -90,7 +90,9 @@ public class FrequenciaController {
             Turma turma = turmaRepository.findById(turmaId)
                     .orElseThrow(() -> new IllegalArgumentException("Turma não encontrada"));
 
-            List<Inscrito> alunos = inscritoRepository.findByTurma(turma);
+            // CORREÇÃO AQUI: Usando findByTurmasContaining para buscar na lista de turmas
+            List<Inscrito> alunos = inscritoRepository.findByTurmasContaining(turma);
+
             boolean salvouAlgo = false;
 
             for (Inscrito aluno : alunos) {
@@ -136,7 +138,9 @@ public class FrequenciaController {
     }
 
     private void carregarDadosDaChamada(Model model, Turma turma) {
-        List<Inscrito> alunosBanco = inscritoRepository.findByTurma(turma);
+        // CORREÇÃO AQUI: Usando findByTurmasContaining
+        List<Inscrito> alunosBanco = inscritoRepository.findByTurmasContaining(turma);
+
         List<DadosAlunoChamada> listaComStats = new ArrayList<>();
 
         if (alunosBanco != null) {
@@ -153,7 +157,7 @@ public class FrequenciaController {
                         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM");
 
                         for (Frequencia f : ultimas) {
-                            // Garante que a frequência é desta turma
+                            // Garante que a frequência é desta turma (importante agora que ele tem várias)
                             if (f.getTurma() != null && f.getTurma().getId().equals(turma.getId())) {
                                 String st = "P".equals(f.getStatus()) ? "Presente" : ("F".equals(f.getStatus()) ? "Falta" : "Justif.");
                                 historico.add(f.getDataAula().format(fmt) + " - " + st);
@@ -176,12 +180,12 @@ public class FrequenciaController {
         model.addAttribute("alunosStats", listaComStats);
     }
 
-    // --- DTO (CLASSE INTERNA COM AS CORREÇÕES) ---
+    // --- DTO (CLASSE INTERNA) ---
     public static class DadosAlunoChamada {
         private final Inscrito aluno;
         private final long totalAulas;
         private final long presencas;
-        private final long totalFaltas; // Adicionado de volta!
+        private final long totalFaltas;
         private final int porcentagem;
         private final String cor;
         private final List<String> historicoResumido;
@@ -192,7 +196,7 @@ public class FrequenciaController {
             this.presencas = presencas;
             this.historicoResumido = historico;
 
-            // CÁLCULO DAS FALTAS (Era isso que faltava!)
+            // CÁLCULO DAS FALTAS
             this.totalFaltas = (totalAulas >= presencas) ? (totalAulas - presencas) : 0;
 
             if (totalAulas == 0) {
@@ -210,13 +214,8 @@ public class FrequenciaController {
         // GETTERS OBRIGATÓRIOS PARA O THYMELEAF
         public Inscrito getAluno() { return aluno; }
         public long getTotalAulas() { return totalAulas; }
-
-        // Importante: O Thymeleaf acessa "totalPresencas" através deste método
         public long getTotalPresencas() { return presencas; }
-
-        // Importante: O Thymeleaf acessa "totalFaltas" através deste método
         public long getTotalFaltas() { return totalFaltas; }
-
         public int getPorcentagem() { return porcentagem; }
         public String getCor() { return cor; }
         public List<String> getHistoricoResumido() { return historicoResumido; }

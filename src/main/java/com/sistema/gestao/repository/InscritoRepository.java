@@ -10,6 +10,7 @@ import java.util.List;
 @Repository
 public interface InscritoRepository extends JpaRepository<Inscrito, Long> {
 
-    List<Inscrito> findByTurma(Turma turma);
+    // Busca todos os inscritos que tenham ESSA turma na sua lista de turmas
+    List<Inscrito> findByTurmasContaining(Turma turma);
 
 }

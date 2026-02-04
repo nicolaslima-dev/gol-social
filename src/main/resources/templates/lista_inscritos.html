@@ -37,26 +37,42 @@
                         <table class="table table-striped table-hover align-middle mb-0">
                             <thead class="text-white" style="background-color: var(--cor-principal);">
                             <tr>
-                                <th class="ps-3">Nome</th>
-                                <th>CPF</th>
-                                <th>Turma</th> <th>Horário</th> <th class="text-center">Status</th>
+                                <th class="ps-3">Nome / CPF</th> <th>Turma</th>
+                                <th>Horário</th>
+                                <th class="text-center">Status</th>
                                 <th class="text-end pe-4">Ações</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr th:each="item : ${lista}">
-                                <td class="ps-3 fw-bold" th:text="${item.nomeCompleto}"></td>
-                                <td th:text="${item.cpf}" style="white-space: nowrap;"></td>
-
-                                <td>
-                                    <div th:if="${item.turma != null}">
-                                        <span class="badge bg-primary" th:text="${item.turma.modalidade}"></span>
-                                        <div class="small text-muted" th:text="${item.turma.nucleo}"></div>
-                                    </div>
-                                    <span th:if="${item.turma == null}" class="badge bg-secondary">Sem Turma</span>
+                                <td class="ps-3">
+                                    <div class="fw-bold" th:text="${item.nomeCompleto}"></div>
+                                    <small class="text-muted" th:text="${item.cpf}"></small>
                                 </td>
 
-                                <td th:text="${item.turma != null ? item.turma.horario : '-'}"></td>
+                                <td>
+                                    <div th:if="${not #lists.isEmpty(item.turmas)}">
+                                        <div th:each="t : ${item.turmas}" class="mb-2">
+
+                                            <span class="badge"
+                                                  th:classappend="${#strings.toString(t.modalidade) == 'Futsal' ? 'bg-warning text-dark' : 'bg-primary'}"
+                                                  th:text="${t.modalidade} + ' - ' + ${t.nome}">
+                                            </span>
+
+                                            <div class="small text-muted fw-bold mt-1" th:text="${t.nucleo}"></div>
+                                        </div>
+                                    </div>
+                                    <span th:if="${#lists.isEmpty(item.turmas)}" class="badge bg-secondary">Sem Turma</span>
+                                </td>
+
+                                <td>
+                                    <div th:if="${not #lists.isEmpty(item.turmas)}">
+                                        <div th:each="t : ${item.turmas}" class="mb-2">
+                                            <span class="small d-block" th:text="${t.horario}"></span>
+                                        </div>
+                                    </div>
+                                    <span th:if="${#lists.isEmpty(item.turmas)}">-</span>
+                                </td>
 
                                 <td class="text-center">
                                     <span th:if="${item.ativo}" class="badge rounded-pill bg-success"><i class="bi bi-check-circle"></i> Ativo</span>

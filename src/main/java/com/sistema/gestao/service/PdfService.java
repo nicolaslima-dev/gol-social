@@ -87,12 +87,30 @@ public class PdfService {
 
             adicionarTituloSecaoFicha(document, "DADOS DA MATRÍCULA", fontSecao);
             PdfPTable tabelaMatricula = criarTabelaGrade(new float[]{1f, 1f, 1f});
-            String modalidade = "Não informada", polo = "Não informado", horario = "Não informado";
-            if (inscrito.getTurma() != null) {
-                modalidade = inscrito.getTurma().getModalidade();
-                polo = inscrito.getTurma().getNucleo();
-                horario = inscrito.getTurma().getHorario();
+
+            // --- INÍCIO DA CORREÇÃO PARA MÚLTIPLAS TURMAS ---
+            String modalidade = "Não informada";
+            String polo = "Não informado";
+            String horario = "Não informado";
+
+            if (inscrito.getTurmas() != null && !inscrito.getTurmas().isEmpty()) {
+                List<String> listaMods = new ArrayList<>();
+                List<String> listaPolos = new ArrayList<>();
+                List<String> listaHors = new ArrayList<>();
+
+                for (Turma t : inscrito.getTurmas()) {
+                    if (t.getModalidade() != null) listaMods.add(t.getModalidade());
+                    // Evita repetir o nome do Polo se for o mesmo
+                    if (t.getNucleo() != null && !listaPolos.contains(t.getNucleo())) listaPolos.add(t.getNucleo());
+                    if (t.getHorario() != null) listaHors.add(t.getHorario());
+                }
+
+                if (!listaMods.isEmpty()) modalidade = String.join(" / ", listaMods);
+                if (!listaPolos.isEmpty()) polo = String.join(" / ", listaPolos);
+                if (!listaHors.isEmpty()) horario = String.join(" / ", listaHors);
             }
+            // --- FIM DA CORREÇÃO ---
+
             addCelulaGrade(tabelaMatricula, "Modalidade:", modalidade, fontLabel, fontDados);
             addCelulaGrade(tabelaMatricula, "Polo/Núcleo:", polo, fontLabel, fontDados);
             addCelulaGrade(tabelaMatricula, "Horário:", horario, fontLabel, fontDados);

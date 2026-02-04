@@ -44,10 +44,12 @@
                             <tbody>
                             <tr th:each="t : ${turmas}">
                                 <td class="ps-4 fw-bold" th:text="${t.nucleo}">Núcleo</td>
+
                                 <td>
-                                    <span th:if="${t.modalidade == 'Futsal'}" class="badge bg-success">Futsal</span>
+                                    <span th:if="${t.modalidade == 'Futsal'}" class="badge bg-warning text-dark">Futsal</span>
                                     <span th:if="${t.modalidade == 'Futebol'}" class="badge bg-primary">Futebol</span>
                                 </td>
+
                                 <td th:text="${t.nome}">Nome</td>
                                 <td th:text="${t.horario}">00:00</td>
                                 <td>

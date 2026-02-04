@@ -1,131 +1,158 @@
 package com.sistema.gestao.controller;
 
 import com.sistema.gestao.entity.Inscrito;
+import com.sistema.gestao.entity.Turma;
 import com.sistema.gestao.repository.InscritoRepository;
 import com.sistema.gestao.repository.TurmaRepository;
 import com.sistema.gestao.service.PdfService;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.IOException;
-import java.time.LocalDate;
+import jakarta.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Controller
+@RequestMapping("/inscritos") // A URL no navegador continua sendo /inscritos
 public class InscritoController {
 
     @Autowired
-    private InscritoRepository repository;
+    private InscritoRepository inscritoRepository;
 
     @Autowired
-    private TurmaRepository turmaRepository; // Necessário para os Cards
+    private TurmaRepository turmaRepository;
 
     @Autowired
     private PdfService pdfService;
 
-    // LISTAR
-    @GetMapping("/inscritos")
+    // --- LISTAR ---
+    @GetMapping
     public String listar(Model model) {
-        model.addAttribute("lista", repository.findAll());
-        return "lista_inscritos"; // Ou o nome da sua lista
+        model.addAttribute("lista", inscritoRepository.findAll());
+        // CORRIGIDO: Procura direto na pasta templates
+        return "lista_inscritos";
     }
 
-    // NOVO (Chama o formulario.html)
-    @GetMapping("/inscritos/novo")
+    // --- NOVO CADASTRO ---
+    @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("inscrito", new Inscrito());
-        model.addAttribute("listaTurmas", turmaRepository.findAll()); // Envia turmas para os Cards
-        return "formulario"; // <--- AJUSTADO AQUI
+        model.addAttribute("listaTurmas", turmaRepository.findAll());
+        // CORRIGIDO: Procura direto na pasta templates
+        return "formulario";
     }
 
-    // SALVAR
-    @PostMapping("/inscritos/salvar")
-    public String salvar(@Valid @ModelAttribute Inscrito inscrito, BindingResult result, Model model) {
+    // --- SALVAR ---
+    @PostMapping("/salvar")
+    public String salvar(@Valid Inscrito inscrito,
+                         BindingResult result,
+                         @RequestParam(required = false) List<Long> turmasSelecionadas,
+                         Model model,
+                         RedirectAttributes attributes) {
 
+        // 1. Validação básica de campos
         if (result.hasErrors()) {
-            // Se der erro, precisamos reenviar a lista de turmas para o formulário não quebrar
             model.addAttribute("listaTurmas", turmaRepository.findAll());
-            return "formulario"; // <--- AJUSTADO AQUI
+            return "formulario"; // CORRIGIDO
         }
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String usuarioLogado = (auth != null) ? auth.getName() : "Sistema";
-
-        if (inscrito.getId() == null) {
-            inscrito.setDataPreenchimento(LocalDate.now());
+        // 2. Prepara a lista de turmas
+        List<Turma> novasTurmas = new ArrayList<>();
+        if (turmasSelecionadas != null && !turmasSelecionadas.isEmpty()) {
+            novasTurmas = turmaRepository.findAllById(turmasSelecionadas);
         }
-        inscrito.setLancadoPor(usuarioLogado);
 
-        repository.save(inscrito);
+        // --- REGRA 1: MÁXIMO DE 2 TURMAS ---
+        if (novasTurmas.size() > 2) {
+            model.addAttribute("erroRegra", "Não é permitido se inscrever em mais de 2 turmas.");
+            model.addAttribute("listaTurmas", turmaRepository.findAll());
+            return "formulario"; // CORRIGIDO
+        }
+
+        // --- REGRA 2: VALIDAÇÃO DE MODALIDADES ---
+        if (novasTurmas.size() == 2) {
+            String modalidade1 = novasTurmas.get(0).getModalidade();
+            String modalidade2 = novasTurmas.get(1).getModalidade();
+
+            if (modalidade1 != null && modalidade1.equalsIgnoreCase(modalidade2)) {
+                model.addAttribute("erroRegra", "Para fazer duas atividades, deve ser uma de FUTEBOL e uma de FUTSAL. Não é permitido repetir a modalidade.");
+                model.addAttribute("listaTurmas", turmaRepository.findAll());
+                return "formulario"; // CORRIGIDO
+            }
+        }
+
+        // --- REGRA 3: VERIFICAR VAGAS ---
+        Inscrito alunoAntigo = null;
+        if (inscrito.getId() != null) {
+            Optional<Inscrito> opt = inscritoRepository.findById(inscrito.getId());
+            if (opt.isPresent()) alunoAntigo = opt.get();
+        }
+
+        for (Turma t : novasTurmas) {
+            boolean jaEstavaNessaTurma = false;
+            if (alunoAntigo != null && alunoAntigo.getTurmas() != null) {
+                if (alunoAntigo.getTurmas().stream().anyMatch(old -> old.getId().equals(t.getId()))) {
+                    jaEstavaNessaTurma = true;
+                }
+            }
+
+            if (!jaEstavaNessaTurma) {
+                int inscritosAtuais = (t.getInscritos() != null) ? t.getInscritos().size() : 0;
+                if (inscritosAtuais >= t.getCapacidade()) {
+                    model.addAttribute("erroRegra", "A turma " + t.getNome() + " já está lotada!");
+                    model.addAttribute("listaTurmas", turmaRepository.findAll());
+                    return "formulario"; // CORRIGIDO
+                }
+            }
+        }
+
+        inscrito.setTurmas(novasTurmas);
+        inscritoRepository.save(inscrito);
+
+        attributes.addFlashAttribute("mensagem", "Beneficiário salvo com sucesso!");
         return "redirect:/inscritos";
     }
 
-    // EDITAR (Chama o formulario.html)
-    @GetMapping("/inscritos/editar/{id}")
+    // --- EDITAR ---
+    @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
-        Inscrito inscrito = repository.findById(id).orElse(null);
-
-        if (inscrito != null) {
-            model.addAttribute("inscrito", inscrito);
-            model.addAttribute("listaTurmas", turmaRepository.findAll()); // Envia turmas
-            return "formulario"; // <--- AJUSTADO AQUI
+        Optional<Inscrito> inscrito = inscritoRepository.findById(id);
+        if (inscrito.isPresent()) {
+            model.addAttribute("inscrito", inscrito.get());
+            model.addAttribute("listaTurmas", turmaRepository.findAll());
+            return "formulario"; // CORRIGIDO
         }
         return "redirect:/inscritos";
     }
 
-    // ... (Mantenha os métodos de inativar, ativar, excluir e PDF iguais ao que você já tinha) ...
-    @GetMapping("/inscritos/inativar/{id}")
-    public String inativar(@PathVariable Long id) {
-        Inscrito inscrito = repository.findById(id).orElse(null);
-        if (inscrito != null) {
-            inscrito.setAtivo(false);
-            repository.save(inscrito);
-        }
+    // --- EXCLUIR ---
+    @GetMapping("/excluir/{id}")
+    public String excluir(@PathVariable Long id, RedirectAttributes attributes) {
+        inscritoRepository.deleteById(id);
+        attributes.addFlashAttribute("mensagem", "Beneficiário removido com sucesso.");
         return "redirect:/inscritos";
     }
 
-    @GetMapping("/inscritos/ativar/{id}")
-    public String ativar(@PathVariable Long id) {
-        Inscrito inscrito = repository.findById(id).orElse(null);
-        if (inscrito != null) {
-            inscrito.setAtivo(true);
-            repository.save(inscrito);
+    // --- PDF ---
+    @GetMapping("/pdf/{id}")
+    public ResponseEntity<byte[]> gerarFichaPdf(@PathVariable Long id) {
+        Optional<Inscrito> inscritoOpt = inscritoRepository.findById(id);
+        if (inscritoOpt.isPresent()) {
+            byte[] pdfBytes = pdfService.gerarFichaInscricao(inscritoOpt.get());
+            String nomeArquivo = "Ficha_" + inscritoOpt.get().getNomeCompleto().replace(" ", "_") + ".pdf";
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + nomeArquivo)
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(pdfBytes);
         }
-        return "redirect:/inscritos";
-    }
-
-    @GetMapping("/inscritos/excluir/{id}")
-    public String excluir(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            repository.deleteById(id);
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("erro", "Não é possível excluir. O beneficiário possui registros vinculados.");
-        }
-        return "redirect:/inscritos";
-    }
-
-    @GetMapping("/inscritos/pdf/{id}")
-    public void gerarPdf(@PathVariable Long id, HttpServletResponse response) throws IOException {
-        Inscrito inscrito = repository.findById(id).orElse(null);
-
-        if (inscrito != null) {
-            response.setContentType("application/pdf");
-            String headerKey = "Content-Disposition";
-            String headerValue = "attachment; filename=ficha_" + inscrito.getNomeCompleto().replace(" ", "_") + ".pdf";
-            response.setHeader(headerKey, headerValue);
-
-            byte[] pdfBytes = pdfService.gerarFichaInscricao(inscrito);
-            response.getOutputStream().write(pdfBytes);
-        }
+        return ResponseEntity.notFound().build();
     }
 }
