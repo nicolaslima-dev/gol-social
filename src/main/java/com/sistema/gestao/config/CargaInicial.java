@@ -3,9 +3,13 @@ package com.sistema.gestao.config;
 import com.sistema.gestao.entity.Funcionario;
 import com.sistema.gestao.entity.Inscrito;
 import com.sistema.gestao.entity.Instituicao;
+import com.sistema.gestao.entity.Nucleo;
+import com.sistema.gestao.entity.Turma;
 import com.sistema.gestao.repository.FuncionarioRepository;
 import com.sistema.gestao.repository.InscritoRepository;
 import com.sistema.gestao.repository.InstituicaoRepository;
+import com.sistema.gestao.repository.NucleoRepository;
+import com.sistema.gestao.repository.TurmaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
@@ -18,30 +22,17 @@ import java.util.Random;
 @Configuration
 public class CargaInicial implements CommandLineRunner {
 
-    @Autowired
-    private FuncionarioRepository funcionarioRepository;
-
-    @Autowired
-    private InscritoRepository inscritoRepository;
-
-    @Autowired
-    private InstituicaoRepository instituicaoRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    @Autowired private FuncionarioRepository funcionarioRepository;
+    @Autowired private InscritoRepository inscritoRepository;
+    @Autowired private InstituicaoRepository instituicaoRepository;
+    @Autowired private TurmaRepository turmaRepository;
+    @Autowired private NucleoRepository nucleoRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) throws Exception {
 
-        System.out.println(">>> INICIANDO CARGA DE DADOS...");
-
-        /* * BLOQUEEI A ATUALIZAÇÃO AUTOMÁTICA DE USUÁRIOS PARA NÃO TRAVAR O SISTEMA.
-         * SE PRECISAR CRIAR NOVO USUÁRIO, DESCOMENTE OU CRIE PELA TELA DO SISTEMA.
-         */
-
-        // --- 1. LOGIN DE ADMINISTRADOR (DESATIVADO TEMPORARIAMENTE) ---
-        // Se precisar resetar a senha, faça pelo banco de dados ou descomente aqui com cuidado.
-        /*
+        // --- 1. ADMIN DE EMERGÊNCIA (CPF NOVO FINAL 99 PARA NÃO TRAVAR) ---
         Optional<Funcionario> adminExistente = funcionarioRepository.findByEmail("admin@golsocial.com.br");
         Funcionario admin;
 
@@ -50,23 +41,21 @@ public class CargaInicial implements CommandLineRunner {
         } else {
             admin = new Funcionario();
             admin.setEmail("admin@golsocial.com.br");
-            admin.setCpf("000.000.000-00");
+            // Mudei o CPF para evitar conflito com o antigo que ficou preso no banco
+            admin.setCpf("000.000.000-99"); 
         }
 
         admin.setNomeCompleto("Administrador Geral");
-        admin.setDataNascimento(LocalDate.of(1980, 1, 1));
         admin.setPerfil("ADMIN");
         admin.setCargo("Gestor");
         admin.setAtivo(true);
-        admin.setSenha(passwordEncoder.encode("580206")); 
+        admin.setSenha(passwordEncoder.encode("580206"));
 
         funcionarioRepository.save(admin);
-        System.out.println(">>> ADMIN VERIFICADO");
-        */
+        System.out.println(">>> ADMIN RECRIADO COM SUCESSO");
 
 
-        // --- 2. LOGIN DE PROFESSOR (DESATIVADO TEMPORARIAMENTE) ---
-        /*
+        // --- 2. PROFESSOR (CPF NOVO FINAL 99 PARA NÃO TRAVAR) ---
         Optional<Funcionario> profExistente = funcionarioRepository.findByEmail("professor@gmail.com");
         Funcionario professor;
 
@@ -74,66 +63,76 @@ public class CargaInicial implements CommandLineRunner {
             professor = profExistente.get();
         } else {
             professor = new Funcionario();
-            professor.setEmail("professor@gmail.com"); 
-            professor.setCpf("111.111.111-11");
+            professor.setEmail("professor@gmail.com");
+            // Mudei o CPF para evitar conflito
+            professor.setCpf("111.111.111-99"); 
         }
 
-        professor.setNomeCompleto("Professor de Teste");
-        professor.setDataNascimento(LocalDate.of(1995, 5, 20));
-        professor.setSenha(passwordEncoder.encode("580206")); 
-
+        professor.setNomeCompleto("Nicolas Silva (Professor)");
+        professor.setSenha(passwordEncoder.encode("580206"));
         professor.setPerfil("PROFESSOR");
         professor.setCargo("Treinador");
         professor.setAtivo(true);
 
-        funcionarioRepository.save(professor);
-        System.out.println(">>> PROFESSOR VERIFICADO");
-        */
+        professor = funcionarioRepository.save(professor);
+        System.out.println(">>> PROFESSOR RECRIADO COM SUCESSO");
 
 
-        // --- 3. DADOS DA INSTITUIÇÃO (MANTIDO) ---
-        // Isso geralmente não dá erro de duplicidade pois verifica count() == 0
+        // --- 3. INSTITUIÇÃO ---
+        Instituicao instituicao;
         if (instituicaoRepository.count() == 0) {
-            Instituicao inst = new Instituicao();
-            inst.setNomeProjeto("PROJETO GOL SOCIAL");
-            inst.setEnderecoCompleto("Rua do Esporte, 100 - Centro - RJ");
-            inst.setTelefone("(21) 99999-0000");
-            inst.setEmail("contato@golsocial.com.br");
-            instituicaoRepository.save(inst);
-            System.out.println(">>> INSTITUIÇÃO CRIADA");
-        }
-
-        // --- 4. LISTA DE ALUNOS (MANTIDO) ---
-        if (inscritoRepository.count() == 0) {
-            criarAluno("João Silva", "111.111.111-11", "joao@email.com", "(21) 99888-1111", "Pendente RG", "Masculino");
-            criarAluno("Pedro Santos", "222.222.222-22", "pedro@email.com", "(21) 98777-2222", null, "Masculino");
-            criarAluno("Julia Costa", "333.333.333-33", "julia@email.com", "(21) 99666-3333", "Foto pendente", "Feminino");
-            criarAluno("Gabriel Rocha", "444.444.444-44", "gabriel@email.com", "(21) 99555-4444", null, "Masculino");
-            criarAluno("Bruno Castro", "555.555.555-55", "bruno@email.com", "(21) 99444-5555", null, "Masculino");
-            System.out.println(">>> ALUNOS DE TESTE CRIADOS");
+            instituicao = new Instituicao();
+            instituicao.setNomeProjeto("PROJETO GOL SOCIAL");
+            instituicao.setEmail("contato@golsocial.com.br");
+            instituicao = instituicaoRepository.save(instituicao);
+        } else {
+            instituicao = instituicaoRepository.findAll().get(0);
         }
         
-        System.out.println(">>> CARGA INICIAL FINALIZADA.");
+        // --- 4. VINCULAR TURMA AO PROFESSOR ---
+        // Garante que o professor tenha uma turma para mostrar na tela
+        if (turmaRepository.count() == 0) {
+            Turma turma = new Turma();
+            turma.setNome("Futebol Sub-17 (Manhã)");
+            turma.setDiasSemana("Seg/Qua/Sex");
+            turma.setHorario("09:00 - 11:00");
+            turma.setLocal("Campo Principal");
+            turma.setCapacidade(30);
+            turma.setProfessor(professor);     // Vincula ao professor novo
+            turma.setInstituicao(instituicao);
+            turmaRepository.save(turma);
+        }
+
+        // --- 5. NÚCLEOS ---
+        criarOuAtualizarNucleo("01", "Praça da Cedae", "Rocha Miranda");
+        criarOuAtualizarNucleo("02", "Campo da Embaú", "Pavuna");
+        criarOuAtualizarNucleo("03", "Praça do Chico", "Pavuna");
+        
+         // --- 6. ALUNOS ---
+         if (inscritoRepository.count() == 0) {
+             criarAluno("João Silva", "999.999.999-01");
+             criarAluno("Pedro Santos", "999.999.999-02");
+         }
     }
 
-    private void criarAluno(String nome, String cpf, String email, String telefone, String obs, String sexo) {
+    private void criarOuAtualizarNucleo(String numero, String nome, String bairro) {
+        Optional<Nucleo> existente = nucleoRepository.findByNumero(numero);
+        Nucleo n = existente.orElse(new Nucleo());
+        n.setNumero(numero);
+        n.setNome(nome);
+        n.setBairro(bairro);
+        nucleoRepository.save(n);
+    }
+    
+    private void criarAluno(String nome, String cpf) {
         Inscrito i = new Inscrito();
         i.setNomeCompleto(nome);
-        i.setCpf(cpf);
-        i.setEmail(email);
-        i.setTelefone(telefone);
-        i.setSexo(sexo);
-        i.setEndereco("Rua dos Alunos, S/N");
-        i.setBairro("Centro");
-        i.setCidade("Rio de Janeiro");
-        i.setNomeResponsavel("Responsável pelo " + nome.split(" ")[0]);
-        i.setCpfResponsavel(cpf);
-        Random rand = new Random();
-        i.setDataNascimento(LocalDate.of(2010 + rand.nextInt(5), 1 + rand.nextInt(12), 1 + rand.nextInt(28)));
-        i.setDataPreenchimento(LocalDate.now());
-        i.setObservacoes(obs);
-        i.setFichaAnexada(true);
+        i.setCpf(cpf); // CPF ficticio pra nao dar erro
+        i.setEmail(nome.split(" ")[0].toLowerCase() + "@teste.com");
+        i.setTelefone("21999999999");
         i.setAtivo(true);
+        i.setDataNascimento(LocalDate.of(2010, 1, 1));
         inscritoRepository.save(i);
     }
 }
+
