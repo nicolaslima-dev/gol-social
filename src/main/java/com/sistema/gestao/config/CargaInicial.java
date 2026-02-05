@@ -33,56 +33,53 @@ public class CargaInicial implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        // --- 1. CRIAR OU ATUALIZAR O ADMINISTRADOR (CORREÇÃO DE LOGIN) ---
-        // A lógica agora é: Se existe, pega ele. Se não existe, cria novo.
-        // E NO FINAL: Força a senha ser 123456.
-
+        // --- 1. LOGIN DE ADMINISTRADOR ---
         Optional<Funcionario> adminExistente = funcionarioRepository.findByEmail("admin@golsocial.com.br");
         Funcionario admin;
 
         if (adminExistente.isPresent()) {
             admin = adminExistente.get();
-            System.out.println(">>> ADMIN ENCONTRADO. ATUALIZANDO SENHA...");
         } else {
             admin = new Funcionario();
             admin.setEmail("admin@golsocial.com.br");
             admin.setCpf("000.000.000-00");
-            System.out.println(">>> CRIANDO NOVO ADMIN...");
         }
 
-        // DADOS OBRIGATÓRIOS (Garante que estão atualizados)
         admin.setNomeCompleto("Administrador Geral");
         admin.setDataNascimento(LocalDate.of(1980, 1, 1));
         admin.setPerfil("ADMIN");
         admin.setCargo("Gestor");
         admin.setAtivo(true);
-
-        // --- AQUI ESTÁ A CORREÇÃO: FORÇA A SENHA NOVAMENTE ---
-        admin.setSenha(passwordEncoder.encode("123456"));
+        admin.setSenha(passwordEncoder.encode("580206")); // Senha atualizada
 
         funcionarioRepository.save(admin);
-        System.out.println(">>> SENHA DO ADMIN REDEFINIDA PARA: 123456");
+        System.out.println(">>> ADMIN ATUALIZADO: admin@golsocial.com.br / 580206");
 
 
-        // --- 2. CRIAR USUÁRIO PARA TESTAR O "PRIMEIRO ACESSO" ---
-        // Corrigi o "gamil.com" para "gmail.com"
-        if (funcionarioRepository.findByEmail("nicolassilvap@gmail.com").isEmpty()) {
-            Funcionario novato = new Funcionario();
-            novato.setNomeCompleto("Professor Teste Primeiro Acesso");
-            novato.setCpf("111.111.111-11");
-            novato.setEmail("nicolassilvap@gmail.com"); // <--- Corrigido para GMAIL
-            novato.setDataNascimento(LocalDate.of(1995, 5, 20));
+        // --- 2. LOGIN DE PROFESSOR (ALTERADO) ---
+        // Mudamos para professor@gmail.com
+        Optional<Funcionario> profExistente = funcionarioRepository.findByEmail("professor@gmail.com");
+        Funcionario professor;
 
-            // Senha NULA para forçar o fluxo de "Primeiro Acesso"
-            novato.setSenha(null);
-
-            novato.setPerfil("PROFESSOR");
-            novato.setCargo("Treinador");
-            novato.setAtivo(true);
-
-            funcionarioRepository.save(novato);
-            System.out.println(">>> USUÁRIO TESTE CRIADO (SEM SENHA). CPF: 111.111.111-11");
+        if (profExistente.isPresent()) {
+            professor = profExistente.get();
+        } else {
+            professor = new Funcionario();
+            professor.setEmail("professor@gmail.com"); // E-mail novo
+            professor.setCpf("111.111.111-11");
         }
+
+        professor.setNomeCompleto("Professor de Teste");
+        professor.setDataNascimento(LocalDate.of(1995, 5, 20));
+        professor.setSenha(passwordEncoder.encode("580206")); // Senha atualizada
+
+        professor.setPerfil("PROFESSOR");
+        professor.setCargo("Treinador");
+        professor.setAtivo(true);
+
+        funcionarioRepository.save(professor);
+        System.out.println(">>> PROFESSOR PRONTO: professor@gmail.com / 580206");
+
 
         // --- 3. DADOS DA INSTITUIÇÃO ---
         if (instituicaoRepository.count() == 0) {
