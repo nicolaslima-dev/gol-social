@@ -1,0 +1,17 @@
+[33m7c78035[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Refatoracao: Migracao de SMTP para Resend API para corrigir timeout no Railway
+[33m3f90d5e[m Correção na ficha de cadastro PDF
+[33mc541bfb[m Correção da opção de turmas que o beneficiário pode participar para duas turmas desde que sejam de modalidades distintas
+[33m82aaa8f[m Correção de erro no método de login e permição de acesso para professores
+[33m1cfc677[m Coloquei a opção de lista da Turma para Pdf
+[33m9d4b430[m Inserir logo no relatório mensal
+[33m7ab7006[m Inserção da autenticação e métodos de login e alinhamento
+[33m818f923[m Correção de error de pagina na aba de frequencia e implementação de feedback dps de realizar a chamada
+[33maf57a94[m Correção de erro na aba de frequencias
+[33m3c77454[m Feat: Adiciona alerta de frequencia <70% no dashboard e corrige entidade Frequencia
+[33m47cf00f[m Professor vinculado ao diário de atividades, assim como a turma também
+[33mbcf4319[m feat: finaliza relatórios PDF, lógica de frequência real e limpeza de dados
+[33m7b8196b[m Feat: Implementa sistema de Backup e Exportação de Dados (CSV e ZIP)
+[33mb3d1df3[m Correção: form_inscrito, validações e entidade Inscrito
+[33m72b5020[m Fix: Responsividade login e correcao imagem logo
+[33mfacae79[m Ajuste de encoding e acentos
+[33m25e08fd[m Projeto Gol Social inicial
