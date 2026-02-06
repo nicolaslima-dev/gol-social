@@ -33,6 +33,8 @@ public class CargaInicial implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
+        System.out.println(">>> INICIANDO CARGA DE DADOS DE SALVAMENTO...");
+
         // --- 1. LOGIN DE ADMINISTRADOR ---
         Optional<Funcionario> adminExistente = funcionarioRepository.findByEmail("admin@golsocial.com.br");
         Funcionario admin;
@@ -42,7 +44,8 @@ public class CargaInicial implements CommandLineRunner {
         } else {
             admin = new Funcionario();
             admin.setEmail("admin@golsocial.com.br");
-            admin.setCpf("000.000.000-00");
+            // Mudei para final 99 para garantir que crie um novo sem conflito com o antigo travado
+            admin.setCpf("000.000.000-99");
         }
 
         admin.setNomeCompleto("Administrador Geral");
@@ -53,11 +56,10 @@ public class CargaInicial implements CommandLineRunner {
         admin.setSenha(passwordEncoder.encode("580206")); // Senha atualizada
 
         funcionarioRepository.save(admin);
-        System.out.println(">>> ADMIN ATUALIZADO: admin@golsocial.com.br / 580206");
+        System.out.println(">>> ADMIN RECRIADO: admin@golsocial.com.br / 580206");
 
 
-        // --- 2. LOGIN DE PROFESSOR (ALTERADO) ---
-        // Mudamos para professor@gmail.com
+        // --- 2. LOGIN DE PROFESSOR ---
         Optional<Funcionario> profExistente = funcionarioRepository.findByEmail("professor@gmail.com");
         Funcionario professor;
 
@@ -65,8 +67,9 @@ public class CargaInicial implements CommandLineRunner {
             professor = profExistente.get();
         } else {
             professor = new Funcionario();
-            professor.setEmail("professor@gmail.com"); // E-mail novo
-            professor.setCpf("111.111.111-11");
+            professor.setEmail("professor@gmail.com");
+            // Mudei para final 99 para garantir que crie um novo sem conflito
+            professor.setCpf("111.111.111-99");
         }
 
         professor.setNomeCompleto("Professor de Teste");
@@ -78,7 +81,7 @@ public class CargaInicial implements CommandLineRunner {
         professor.setAtivo(true);
 
         funcionarioRepository.save(professor);
-        System.out.println(">>> PROFESSOR PRONTO: professor@gmail.com / 580206");
+        System.out.println(">>> PROFESSOR RECRIADO: professor@gmail.com / 580206");
 
 
         // --- 3. DADOS DA INSTITUIÇÃO ---
@@ -92,6 +95,7 @@ public class CargaInicial implements CommandLineRunner {
         }
 
         // --- 4. LISTA DE ALUNOS ---
+        // CPFs dos alunos mantidos originais pois não conflitam com funcionário
         if (inscritoRepository.count() == 0) {
             criarAluno("João Silva", "111.111.111-11", "joao@email.com", "(21) 99888-1111", "Pendente RG", "Masculino");
             criarAluno("Pedro Santos", "222.222.222-22", "pedro@email.com", "(21) 98777-2222", null, "Masculino");

@@ -3,6 +3,7 @@ package com.sistema.gestao.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.springframework.format.annotation.DateTimeFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore; // <--- IMPORTANTE: Importação adicionada
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -49,14 +50,14 @@ public class Inscrito {
 
     private String email;
 
-    // --- MATRÍCULA (ALTERADO PARA LISTA - MUITOS PARA MUITOS) ---
-    // Agora aceita múltiplas turmas. A limitação de 2 será feita no Service/Controller.
+    // --- MATRÍCULA (MUITOS PARA MUITOS) ---
     @ManyToMany
     @JoinTable(
-            name = "inscrito_turmas", // Nome da tabela intermediária
+            name = "inscrito_turmas",
             joinColumns = @JoinColumn(name = "inscrito_id"),
             inverseJoinColumns = @JoinColumn(name = "turma_id")
     )
+    @JsonIgnore // <--- ADICIONADO: Evita loop infinito e travamento ao carregar dados
     private List<Turma> turmas = new ArrayList<>();
 
     private boolean fichaAnexada;
@@ -73,10 +74,11 @@ public class Inscrito {
 
     // --- RELACIONAMENTOS ---
     @OneToMany(mappedBy = "inscrito", cascade = CascadeType.ALL)
+    @JsonIgnore // <--- ADICIONADO: Evita carregar milhares de frequências desnecessariamente
     private List<Frequencia> frequencias = new ArrayList<>();
 
     // =================================================================
-    // GETTERS E SETTERS
+    // GETTERS E SETTERS (Mantidos exatamente como estavam)
     // =================================================================
 
     public Long getId() { return id; }
@@ -115,12 +117,10 @@ public class Inscrito {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    // --- GETTER E SETTER ATUALIZADOS PARA LISTA ---
     public List<Turma> getTurmas() { return turmas; }
 
     public void setTurmas(List<Turma> turmas) { this.turmas = turmas; }
 
-    // Método auxiliar para adicionar uma turma individualmente
     public void adicionarTurma(Turma turma) {
         if (!this.turmas.contains(turma)) {
             this.turmas.add(turma);
