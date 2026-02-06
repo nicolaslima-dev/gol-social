@@ -92,9 +92,13 @@
                                 <label class="form-label fw-bold"><i class="bi bi-envelope"></i> E-mail</label>
                                 <input type="email" th:field="*{email}" class="form-control" placeholder="joao@exemplo.com" required>
                             </div>
+
                             <div class="col-md-6">
                                 <label class="form-label fw-bold"><i class="bi bi-phone"></i> Telefone</label>
-                                <input type="text" th:field="*{telefone}" class="form-control" placeholder="(00) 00000-0000">
+                                <input type="text" th:field="*{telefone}" class="form-control"
+                                       placeholder="(00) 00000-0000"
+                                       maxlength="15"
+                                       oninput="mascaraTelefone(this)">
                             </div>
                         </div>
 
@@ -179,6 +183,23 @@
         i.setAttribute("maxlength", "14");
         if (v.length == 3 || v.length == 7) i.value += ".";
         if (v.length == 11) i.value += "-";
+    }
+
+    // --- NOVA FUNÇÃO DE MÁSCARA DE TELEFONE ---
+    function mascaraTelefone(i) {
+        var v = i.value;
+
+        // Remove tudo o que não é dígito
+        v = v.replace(/\D/g, "");
+
+        // Coloca parênteses em volta dos dois primeiros dígitos
+        v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+
+        // Coloca hífen entre o quarto e o quinto dígitos (funciona para fixo e celular)
+        // Se tiver mais de 10 caracteres (contando formatação), é celular (9 dígitos), senão fixo (8 dígitos)
+        v = v.replace(/(\d)(\d{4})$/, "$1-$2");
+
+        i.value = v;
     }
 </script>
 

@@ -70,6 +70,13 @@ public class AuthController {
 
         Funcionario funcionario = funcOpt.get();
 
+        // --- TRAVA DE SEGURANÇA 1: INATIVO NÃO ENTRA ---
+        if (!funcionario.isAtivo()) {
+            attributes.addFlashAttribute("erro", "Acesso revogado. Entre em contato com a administração.");
+            return "redirect:/auth/primeiro_acesso";
+        }
+        // -----------------------------------------------
+
         // Validação original: Se já tem senha, manda recuperar
         if (funcionario.getSenha() != null && !funcionario.getSenha().isEmpty()) {
             attributes.addFlashAttribute("aviso", "Você já possui conta ativa! Use a recuperação de senha.");
@@ -95,7 +102,16 @@ public class AuthController {
             return "redirect:/auth/recuperar";
         }
 
-        enviarCodigo(funcOpt.get());
+        Funcionario funcionario = funcOpt.get();
+
+        // --- TRAVA DE SEGURANÇA 2: INATIVO NÃO RECUPERA SENHA ---
+        if (!funcionario.isAtivo()) {
+            attributes.addFlashAttribute("erro", "Acesso revogado. Entre em contato com a administração.");
+            return "redirect:/auth/recuperar";
+        }
+        // --------------------------------------------------------
+
+        enviarCodigo(funcionario);
         attributes.addFlashAttribute("sucesso", "Dados confirmados! O código foi enviado para seu e-mail.");
         return "redirect:/auth/validar_codigo";
     }
@@ -176,7 +192,7 @@ public class AuthController {
         return "redirect:/login";
     }
 
-    // --- AUXILIARES ATUALIZADOS ---
+    // --- AUXILIARES ---
 
     private void enviarCodigo(Funcionario f) {
         // Gera código de 6 dígitos

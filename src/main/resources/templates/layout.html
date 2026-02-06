@@ -51,12 +51,20 @@
                     <p class="text-white-50 small mb-2" sec:authentication="name">Usuário</p>
 
                     <a href="/" class="nav-link text-white"><i class="bi bi-speedometer2"></i> Dashboard</a>
-                    <a href="/inscritos" class="nav-link text-white"><i class="bi bi-people-fill"></i> Beneficiários</a>
-                    <a href="/turmas" class="nav-link text-white"><i class="bi bi-easel-fill"></i> Gestão de Turmas</a>
+
+                    <a href="/inscritos" class="nav-link text-white" sec:authorize="hasRole('ADMIN')">
+                        <i class="bi bi-people-fill"></i> Beneficiários
+                    </a>
+                    <a href="/turmas" class="nav-link text-white" sec:authorize="hasRole('ADMIN')">
+                        <i class="bi bi-easel-fill"></i> Gestão de Turmas
+                    </a>
+
                     <a href="/frequencia" class="nav-link text-white"><i class="bi bi-calendar-check"></i> Frequência</a>
                     <a href="/atividades" class="nav-link text-white"><i class="bi bi-journal-text"></i> Diário de Aulas</a>
-                    <a href="/funcionarios" class="nav-link text-white"><i class="bi bi-person-badge"></i> Funcionários</a>
 
+                    <a href="/funcionarios" class="nav-link text-white" sec:authorize="hasRole('ADMIN')">
+                        <i class="bi bi-person-badge"></i> Funcionários
+                    </a>
                     <a href="/configuracoes" class="nav-link text-warning" sec:authorize="hasRole('ADMIN')">
                         <i class="bi bi-gear"></i> Configurações
                     </a>
@@ -75,11 +83,14 @@
         </div>
 
         <a href="/"><i class="bi bi-speedometer2"></i> Dashboard</a>
-        <a href="/inscritos"><i class="bi bi-people-fill"></i> Beneficiários</a>
-        <a href="/turmas"><i class="bi bi-easel-fill"></i> Turmas</a>
+
+        <a href="/inscritos" sec:authorize="hasRole('ADMIN')"><i class="bi bi-people-fill"></i> Beneficiários</a>
+        <a href="/turmas" sec:authorize="hasRole('ADMIN')"><i class="bi bi-easel-fill"></i> Turmas</a>
+
         <a href="/frequencia"><i class="bi bi-calendar-check"></i> Frequência</a>
         <a href="/atividades"><i class="bi bi-journal-text"></i> Diário</a>
-        <a href="/funcionarios"><i class="bi bi-person-badge"></i> Funcionários</a>
+
+        <a href="/funcionarios" sec:authorize="hasRole('ADMIN')"><i class="bi bi-person-badge"></i> Funcionários</a>
 
         <hr style="border-color: var(--cor-texto-menu);">
 

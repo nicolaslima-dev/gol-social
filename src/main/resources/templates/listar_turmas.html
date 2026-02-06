@@ -37,8 +37,7 @@
                                 <th>Modalidade</th>
                                 <th>Turma</th>
                                 <th>Horário</th>
-                                <th>Capacidade</th>
-                                <th class="text-end pe-4">Ações</th>
+                                <th>Ocupação (Vagas)</th> <th class="text-end pe-4">Ações</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -52,8 +51,28 @@
 
                                 <td th:text="${t.nome}">Nome</td>
                                 <td th:text="${t.horario}">00:00</td>
+
                                 <td>
-                                    <span class="badge bg-secondary" th:text="${t.capacidade} + ' vagas'"></span>
+                                    <div th:with="restantes=${t.vagasRestantes}, total=${t.capacidade}">
+
+                                        <div th:if="${restantes > 0}">
+                                            <span class="badge bg-success mb-1">
+                                                <i class="bi bi-check-circle"></i> Disponível
+                                            </span>
+                                            <div style="font-size: 0.85em;" class="text-muted">
+                                                <strong th:text="${restantes}"></strong> vagas restantes de <span th:text="${total}"></span>
+                                            </div>
+                                        </div>
+
+                                        <div th:if="${restantes <= 0}">
+                                            <span class="badge bg-danger mb-1">
+                                                <i class="bi bi-x-circle"></i> LOTADA
+                                            </span>
+                                            <div style="font-size: 0.85em;" class="text-muted">
+                                                Capacidade Máxima (<span th:text="${total}"></span>) atingida
+                                            </div>
+                                        </div>
+                                    </div>
                                 </td>
 
                                 <td class="text-end pe-4">

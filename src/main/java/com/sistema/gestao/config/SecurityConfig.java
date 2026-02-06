@@ -12,7 +12,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // Habilita a proteção direta nos Controllers (@PreAuthorize)
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -20,22 +20,25 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // 1. LIBERA ARQUIVOS ESTÁTICOS (CSS, JS, IMAGENS)
+                        // 1. ARQUIVOS ESTÁTICOS
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/img/**", "/webjars/**").permitAll()
 
-                        // 2. LIBERA TELA DE LOGIN
+                        // 2. TELA DE LOGIN
                         .requestMatchers("/auth/**", "/login").permitAll()
 
-                        // 3. REGRAS DE ADMIN (Acesso Exclusivo à Configuração e Backups)
+                        // 3. REGRAS DE ADMIN (AQUI ADICIONAMOS AS NOVAS RESTRIÇÕES)
                         .requestMatchers(
                                 "/configuracoes/**",
                                 "/usuarios/**",
                                 "/instituicao/**",
-                                "/backup/**"
+                                "/backup/**",
+                                "/inscritos/**",    // <--- Adicionado
+                                "/turmas/**",       // <--- Adicionado
+                                "/funcionarios/**"  // <--- Adicionado
                         ).hasRole("ADMIN")
 
-                        // 4. RESTO DO SISTEMA (Dashboard, Alunos, Turmas, Funcionários, Relatórios)
-                        // Permite acesso para ADMIN e PROFESSOR (qualquer um logado)
+                        // 4. RESTO DO SISTEMA (Dashboard, Frequencia, Atividades)
+                        // Fica liberado para ADMIN e PROFESSOR
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
