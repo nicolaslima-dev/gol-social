@@ -4,7 +4,7 @@ import com.sistema.gestao.entity.Funcionario;
 import com.sistema.gestao.entity.HistoricoSenha;
 import com.sistema.gestao.entity.Usuario;
 import com.sistema.gestao.repository.FuncionarioRepository;
-import com.sistema.gestao.repository.HistoricoSenhaRepository; // NOVO
+import com.sistema.gestao.repository.HistoricoSenhaRepository;
 import com.sistema.gestao.repository.UsuarioRepository;
 import com.sistema.gestao.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,7 @@ public class AuthController {
 
     @Autowired private FuncionarioRepository funcionarioRepository;
     @Autowired private UsuarioRepository usuarioRepository;
-    @Autowired private HistoricoSenhaRepository historicoSenhaRepository; // INJEÇÃO DO HISTÓRICO
+    @Autowired private HistoricoSenhaRepository historicoSenhaRepository;
     @Autowired private EmailService emailService;
     @Autowired private PasswordEncoder passwordEncoder;
 
@@ -55,7 +55,6 @@ public class AuthController {
 
     // --- AÇÕES (POST) ---
 
-    // 1. PRIMEIRO ACESSO
     @PostMapping("/validar_primeiro_acesso")
     public String validarPrimeiroAcesso(
             @RequestParam String cpf,
@@ -71,6 +70,7 @@ public class AuthController {
 
         Funcionario funcionario = funcOpt.get();
 
+        // Validação original: Se já tem senha, manda recuperar
         if (funcionario.getSenha() != null && !funcionario.getSenha().isEmpty()) {
             attributes.addFlashAttribute("aviso", "Você já possui conta ativa! Use a recuperação de senha.");
             return "redirect:/auth/recuperar";
@@ -81,7 +81,6 @@ public class AuthController {
         return "redirect:/auth/validar_codigo";
     }
 
-    // 2. RECUPERAÇÃO DE SENHA RIGOROSA
     @PostMapping("/enviar_recuperacao")
     public String enviarRecuperacao(
             @RequestParam String email,
@@ -101,7 +100,6 @@ public class AuthController {
         return "redirect:/auth/validar_codigo";
     }
 
-    // 3. CONFIRMAR CÓDIGO
     @PostMapping("/confirmar_codigo")
     public String confirmarCodigo(@RequestParam String codigo, RedirectAttributes attributes) {
         Optional<Funcionario> funcOpt = funcionarioRepository.findByTokenRecuperacao(codigo);
@@ -121,7 +119,6 @@ public class AuthController {
         return "redirect:/auth/nova_senha?token=" + codigo;
     }
 
-    // 4. SALVAR NOVA SENHA (COM VALIDAÇÃO DE HISTÓRICO)
     @PostMapping("/salvar_senha")
     public String salvarSenha(
             @RequestParam String token,
@@ -129,7 +126,6 @@ public class AuthController {
             @RequestParam String confirmaSenha,
             RedirectAttributes attributes) {
 
-        // A. Valida se as senhas digitadas conferem
         if (!senha.equals(confirmaSenha)) {
             attributes.addFlashAttribute("erro", "As senhas não coincidem. Tente novamente.");
             return "redirect:/auth/nova_senha?token=" + token;
@@ -142,42 +138,33 @@ public class AuthController {
 
         Funcionario funcionario = funcOpt.get();
 
-        // B. LÓGICA DE HISTÓRICO DE SENHAS -------------------------
-
-        // 1. Verifica se é igual à senha ATUAL
+        // Validação de Histórico Original
         if (funcionario.getSenha() != null && passwordEncoder.matches(senha, funcionario.getSenha())) {
             attributes.addFlashAttribute("erro", "Você não pode utilizar sua senha atual. Escolha uma nova.");
             return "redirect:/auth/nova_senha?token=" + token;
         }
 
-        // 2. Verifica se é igual a alguma senha do HISTÓRICO
         List<HistoricoSenha> senhasAntigas = historicoSenhaRepository.findByFuncionario(funcionario);
-
         for (HistoricoSenha historico : senhasAntigas) {
             if (passwordEncoder.matches(senha, historico.getSenhaHash())) {
-                attributes.addFlashAttribute("erro", "Esta senha já foi utilizada anteriormente. Por segurança, escolha uma senha inédita.");
+                attributes.addFlashAttribute("erro", "Esta senha já foi utilizada anteriormente.");
                 return "redirect:/auth/nova_senha?token=" + token;
             }
         }
 
-        // 3. Se passou nas validações, SALVA A SENHA ANTIGA NO HISTÓRICO antes de mudar
         if (funcionario.getSenha() != null && !funcionario.getSenha().isEmpty()) {
             HistoricoSenha novaEntradaHistorico = new HistoricoSenha(funcionario.getSenha(), funcionario);
             historicoSenhaRepository.save(novaEntradaHistorico);
         }
-        // ----------------------------------------------------------
 
         String senhaCriptografada = passwordEncoder.encode(senha);
 
-        // Atualiza Funcionário
         funcionario.setSenha(senhaCriptografada);
         funcionario.setTokenRecuperacao(null);
         funcionario.setTokenValidade(null);
         funcionarioRepository.save(funcionario);
 
-        // Atualiza/Cria Usuário de Login
-        Usuario usuario = usuarioRepository.findByLogin(funcionario.getEmail())
-                .orElse(new Usuario());
+        Usuario usuario = usuarioRepository.findByLogin(funcionario.getEmail()).orElse(new Usuario());
         usuario.setLogin(funcionario.getEmail());
         usuario.setSenha(senhaCriptografada);
         if (usuario.getPerfil() == null || usuario.getPerfil().isEmpty()) {
@@ -185,16 +172,22 @@ public class AuthController {
         }
         usuarioRepository.save(usuario);
 
-        attributes.addFlashAttribute("sucesso", "Senha alterada com sucesso! O histórico foi atualizado.");
+        attributes.addFlashAttribute("sucesso", "Senha alterada com sucesso!");
         return "redirect:/login";
     }
 
-    // AUXILIARES
+    // --- AUXILIARES ATUALIZADOS ---
+
     private void enviarCodigo(Funcionario f) {
+        // Gera código de 6 dígitos
         String codigo = String.format("%06d", new Random().nextInt(999999));
+
+        // Salva no banco para validação posterior
         f.setTokenRecuperacao(codigo);
         f.setTokenValidade(LocalDateTime.now().plusMinutes(15));
         funcionarioRepository.save(f);
+
+        // Dispara o e-mail via Resend (Assíncrono)
         emailService.enviarCodigoRecuperacao(f.getEmail(), codigo);
     }
 
