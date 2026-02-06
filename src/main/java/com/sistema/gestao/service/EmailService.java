@@ -14,20 +14,19 @@ public class EmailService {
 
     @Async
     public void enviarCodigoRecuperacao(String para, String codigo) {
-        // Agora usando a variável correta da linha 4
         Resend resend = new Resend(resendApiKey);
 
-        // Ajustado para CreateEmailOptions (padrão da v3.1.0)
+        // Agora enviando do seu domínio personalizado
         CreateEmailOptions params = CreateEmailOptions.builder()
-                .from("onboarding@resend.dev")
+                .from("sistema@golsocial.app.br") //
                 .to(para)
-                .subject("Código de Acesso - Sistema de Gestão")
+                .subject("Código de Acesso - Gol Social")
                 .html("Olá! Seu código de verificação é: <strong>" + codigo + "</strong>")
                 .build();
 
         try {
             resend.emails().send(params);
-            System.out.println("E-mail enviado via API Resend!");
+            System.out.println("E-mail enviado via seu domínio oficial!");
         } catch (Exception e) {
             System.err.println("Erro ao enviar e-mail: " + e.getMessage());
         }
