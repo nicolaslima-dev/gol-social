@@ -25,14 +25,12 @@
                     transform: translateY(-2px);
                 }
 
-                /* Estilo quando selecionado */
                 .opcao-turma-input:checked + .card-turma {
                     border-color: #590d68;
                     background-color: #fcf4fd;
                     box-shadow: 0 4px 8px rgba(89, 13, 104, 0.15);
                 }
 
-                /* Estilo quando DESABILITADO (LOTADA) */
                 .opcao-turma-input:disabled + .card-turma {
                     background-color: #f8f9fa;
                     border-color: #dee2e6;
@@ -149,6 +147,69 @@
                                 <input type="email" th:field="*{email}" class="form-control" placeholder="exemplo@email.com">
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header text-white fw-bold py-2" style="background-color: var(--cor-principal);">
+                        <i class="bi bi-mortarboard-fill me-2"></i> Escolaridade e Análise Social
+                    </div>
+                    <div class="card-body p-4">
+
+                        <h6 class="text-secondary fw-bold mb-3 border-bottom pb-2">Dados Escolares</h6>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Escolaridade *</label>
+                                <select th:field="*{escolaridade}" class="form-select" required>
+                                    <option value="">Selecione...</option>
+                                    <option value="Fundamental Incompleto">Fundamental Incompleto</option>
+                                    <option value="Fundamental Completo">Fundamental Completo</option>
+                                    <option value="Médio Incompleto">Médio Incompleto</option>
+                                    <option value="Médio Completo">Médio Completo</option>
+                                </select>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold">Nome da Escola</label>
+                                <input type="text" th:field="*{nomeEscola}" class="form-control" placeholder="Ex: Escola Municipal...">
+                            </div>
+                        </div>
+
+                        <h6 class="text-secondary fw-bold mb-3 border-bottom pb-2">Análise Social</h6>
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Recebe Benefício Social?</label>
+                                <select th:field="*{recebeBeneficio}" class="form-select">
+                                    <option value="Não">Não</option>
+                                    <option value="Sim">Sim</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Renda Familiar (R$)</label>
+                                <input type="text" th:field="*{rendaFamiliar}" class="form-control" placeholder="0,00">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Pessoas na Casa</label>
+                                <input type="number" th:field="*{quantasPessoasCasa}" class="form-control" placeholder="0">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Grau de Parentesco</label>
+                                <input type="text" th:field="*{grauParentesco}" class="form-control" placeholder="Ex: Mãe, Pai, Avó...">
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="alert alert-warning border-2 d-flex align-items-center mb-4" role="alert">
+                    <i class="bi bi-file-earmark-text-fill fs-2 me-3"></i>
+                    <div>
+                        <h6 class="fw-bold mb-1">DOCUMENTOS NECESSÁRIOS PARA MATRÍCULA:</h6>
+                        <span class="small text-dark">
+                            IDENTIDADE, CPF, COMPROVANTE DE RESIDÊNCIA (DE AMBOS) E DECLARAÇÃO ESCOLAR.
+                        </span>
                     </div>
                 </div>
 

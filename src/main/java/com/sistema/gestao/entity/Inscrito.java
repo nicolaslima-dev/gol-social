@@ -3,7 +3,7 @@ package com.sistema.gestao.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import org.springframework.format.annotation.DateTimeFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore; // <--- IMPORTANTE: Importação adicionada
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -50,6 +50,21 @@ public class Inscrito {
 
     private String email;
 
+    // --- DADOS ESCOLARES (NOVO) ---
+    @NotBlank(message = "A escolaridade é obrigatória")
+    private String escolaridade;
+
+    private String nomeEscola;
+
+    // --- ANÁLISE SOCIAL (NOVO) ---
+    private String recebeBeneficio; // Ex: "Sim", "Não"
+
+    private String rendaFamiliar;
+
+    private Integer quantasPessoasCasa;
+
+    private String grauParentesco; // Ex: Pai, Mãe, Avó
+
     // --- MATRÍCULA (MUITOS PARA MUITOS) ---
     @ManyToMany
     @JoinTable(
@@ -57,7 +72,7 @@ public class Inscrito {
             joinColumns = @JoinColumn(name = "inscrito_id"),
             inverseJoinColumns = @JoinColumn(name = "turma_id")
     )
-    @JsonIgnore // <--- ADICIONADO: Evita loop infinito e travamento ao carregar dados
+    @JsonIgnore
     private List<Turma> turmas = new ArrayList<>();
 
     private boolean fichaAnexada;
@@ -74,11 +89,11 @@ public class Inscrito {
 
     // --- RELACIONAMENTOS ---
     @OneToMany(mappedBy = "inscrito", cascade = CascadeType.ALL)
-    @JsonIgnore // <--- ADICIONADO: Evita carregar milhares de frequências desnecessariamente
+    @JsonIgnore
     private List<Frequencia> frequencias = new ArrayList<>();
 
     // =================================================================
-    // GETTERS E SETTERS (Mantidos exatamente como estavam)
+    // GETTERS E SETTERS
     // =================================================================
 
     public Long getId() { return id; }
@@ -117,8 +132,26 @@ public class Inscrito {
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
-    public List<Turma> getTurmas() { return turmas; }
+    // Novos Getters e Setters
+    public String getEscolaridade() { return escolaridade; }
+    public void setEscolaridade(String escolaridade) { this.escolaridade = escolaridade; }
 
+    public String getNomeEscola() { return nomeEscola; }
+    public void setNomeEscola(String nomeEscola) { this.nomeEscola = nomeEscola; }
+
+    public String getRecebeBeneficio() { return recebeBeneficio; }
+    public void setRecebeBeneficio(String recebeBeneficio) { this.recebeBeneficio = recebeBeneficio; }
+
+    public String getRendaFamiliar() { return rendaFamiliar; }
+    public void setRendaFamiliar(String rendaFamiliar) { this.rendaFamiliar = rendaFamiliar; }
+
+    public Integer getQuantasPessoasCasa() { return quantasPessoasCasa; }
+    public void setQuantasPessoasCasa(Integer quantasPessoasCasa) { this.quantasPessoasCasa = quantasPessoasCasa; }
+
+    public String getGrauParentesco() { return grauParentesco; }
+    public void setGrauParentesco(String grauParentesco) { this.grauParentesco = grauParentesco; }
+
+    public List<Turma> getTurmas() { return turmas; }
     public void setTurmas(List<Turma> turmas) { this.turmas = turmas; }
 
     public void adicionarTurma(Turma turma) {
