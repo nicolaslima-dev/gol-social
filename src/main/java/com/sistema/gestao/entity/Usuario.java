@@ -14,7 +14,7 @@ public class Usuario {
 
     private String senha;
 
-    private String perfil; // ADMIN, PROFESSOR, FINANCEIRO
+    private String perfil; // ADMIN, PROFESSOR
 
     // --- GETTERS E SETTERS MANUAIS ---
     // Adicionamos isso para o IntelliJ parar de reclamar que não acha os métodos.

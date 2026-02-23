@@ -52,6 +52,8 @@
 
                     <a href="/" class="nav-link text-white"><i class="bi bi-speedometer2"></i> Dashboard</a>
 
+                    <a href="/perfil" class="nav-link text-white"><i class="bi bi-person-circle"></i> Meu Perfil</a>
+
                     <a href="/inscritos" class="nav-link text-white" sec:authorize="hasRole('ADMIN')">
                         <i class="bi bi-people-fill"></i> Beneficiários
                     </a>
@@ -83,6 +85,8 @@
         </div>
 
         <a href="/"><i class="bi bi-speedometer2"></i> Dashboard</a>
+
+        <a href="/perfil"><i class="bi bi-person-circle"></i> Meu Perfil</a>
 
         <a href="/inscritos" sec:authorize="hasRole('ADMIN')"><i class="bi bi-people-fill"></i> Beneficiários</a>
         <a href="/turmas" sec:authorize="hasRole('ADMIN')"><i class="bi bi-easel-fill"></i> Turmas</a>

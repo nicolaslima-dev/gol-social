@@ -26,7 +26,7 @@ public class SecurityConfig {
                         // 2. TELA DE LOGIN
                         .requestMatchers("/auth/**", "/login").permitAll()
 
-                        // 3. REGRAS DE ADMIN (AQUI ADICIONAMOS AS NOVAS RESTRIÇÕES)
+                        // 3. REGRAS DE ADMIN
                         .requestMatchers(
                                 "/configuracoes/**",
                                 "/usuarios/**",

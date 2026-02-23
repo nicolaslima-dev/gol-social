@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head th:replace="~{layout :: cabecalho}"></head>
+
+<body>
+<div class="container-fluid">
+    <div class="row">
+
+        <div th:replace="~{layout :: menu-lateral}"></div>
+
+        <main class="col-md-10 ms-sm-auto px-md-4 py-4 bg-light" style="min-height: 100vh;">
+
+            <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+                <h3 style="color: var(--cor-principal);">
+                    <i class="bi bi-person-circle"></i> Meu Perfil
+                </h3>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header text-white py-3" style="background-color: var(--cor-principal);">
+                    <h5 class="m-0"><i class="bi bi-card-text"></i> Meus Dados Pessoais</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-secondary">Nome Completo</label>
+                            <input type="text" class="form-control bg-light border-0 shadow-sm" th:value="${funcionario.nomeCompleto}" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold text-secondary">E-mail (Login)</label>
+                            <input type="email" class="form-control bg-light border-0 shadow-sm" th:value="${funcionario.email}" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-secondary">CPF</label>
+                            <input type="text" class="form-control bg-light border-0 shadow-sm" th:value="${funcionario.cpf}" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-secondary">Cargo</label>
+                            <input type="text" class="form-control bg-light border-0 shadow-sm" th:value="${funcionario.cargo}" readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-secondary">Telefone</label>
+                            <input type="text" class="form-control bg-light border-0 shadow-sm" th:value="${funcionario.telefone}" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header text-white py-3" style="background-color: var(--cor-principal);">
+                    <h5 class="m-0"><i class="bi bi-file-earmark-pdf"></i> Meus Relatórios</h5>
+                </div>
+                <div class="card-body p-5 text-center bg-white rounded-bottom">
+                    <p class="text-muted mb-4" style="font-size: 1.1rem;">Clique no botão abaixo para preencher e gerar o seu relatório mensal de atividades em PDF.</p>
+
+                    <a th:if="${funcionario.ativo}" th:href="@{/relatorios/novo/{id}(id=${funcionario.id})}"
+                       class="btn btn-primary btn-lg shadow px-4 py-2" title="Gerar Relatório">
+                        <i class="bi bi-file-text me-2"></i> Gerar Novo Relatório Mensal
+                    </a>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+</body>
+</html>
