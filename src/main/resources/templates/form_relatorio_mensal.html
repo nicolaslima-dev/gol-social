@@ -41,13 +41,64 @@
                                 <i class="bi bi-geo-alt-fill"></i> Selecione o Polo/Núcleo:
                             </label>
                             <div class="row">
-                                <div class="col-md-3 mb-2" th:each="i : ${#numbers.sequence(1, 10)}">
+                                <div class="col-md-6 mb-2">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" th:field="*{polo}"
-                                               th:value="'Polo ' + ${i}" th:id="'polo' + ${i}" required>
-                                        <label class="form-check-label" th:for="'polo' + ${i}">
-                                            Polo <span th:text="${i}"></span>
-                                        </label>
+                                        <input class="form-check-input" type="radio" th:field="*{polo}" value="Praça da Cedae" id="polo1" required>
+                                        <label class="form-check-label" for="polo1">Praça da Cedae</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" th:field="*{polo}" value="Pavuna (Campo da Embau)" id="polo2" required>
+                                        <label class="form-check-label" for="polo2">Pavuna (Campo da Embau)</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" th:field="*{polo}" value="Pavuna (Campo da praça do Chico)" id="polo3" required>
+                                        <label class="form-check-label" for="polo3">Pavuna (Campo da praça do Chico)</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" th:field="*{polo}" value="Guadalupe" id="polo4" required>
+                                        <label class="form-check-label" for="polo4">Guadalupe</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" th:field="*{polo}" value="Vila kennedy" id="polo5" required>
+                                        <label class="form-check-label" for="polo5">Vila kennedy</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" th:field="*{polo}" value="Cosmos (Vila olímpica)" id="polo6" required>
+                                        <label class="form-check-label" for="polo6">Cosmos (Vila olímpica)</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" th:field="*{polo}" value="Cosmos (Praça do Redondo)" id="polo7" required>
+                                        <label class="form-check-label" for="polo7">Cosmos (Praça do Redondo)</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" th:field="*{polo}" value="Benfica" id="polo8" required>
+                                        <label class="form-check-label" for="polo8">Benfica</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" th:field="*{polo}" value="Barra de Guaratiba" id="polo9" required>
+                                        <label class="form-check-label" for="polo9">Barra de Guaratiba</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" th:field="*{polo}" value="Costa Barros" id="polo10" required>
+                                        <label class="form-check-label" for="polo10">Costa Barros</label>
                                     </div>
                                 </div>
                             </div>
