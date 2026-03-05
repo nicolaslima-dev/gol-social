@@ -406,20 +406,8 @@ public class PdfService {
     // =================================================================================
 
     private String getDescricaoNucleo(String codigo) {
-        if (codigo == null) return "";
-        switch (codigo) {
-            case "Nucleo 01": return "Núcleo 01 - Praça da Cedae";
-            case "Nucleo 02": return "Núcleo 02 - Pavuna (Campo da Embau)";
-            case "Nucleo 03": return "Núcleo 03 - Pavuna (Campo da praça do Chico)";
-            case "Nucleo 04": return "Núcleo 04 - Guadalupe";
-            case "Nucleo 05": return "Núcleo 05 - Vila kennedy";
-            case "Nucleo 06": return "Núcleo 06 - Cosmos (Vila olímpica)";
-            case "Nucleo 07": return "Núcleo 07 - Cosmos (Praça do Redondo)";
-            case "Nucleo 08": return "Núcleo 08 - Benfica";
-            case "Nucleo 09": return "Núcleo 09 - Barra de Guaratiba";
-            case "Nucleo 10": return "Núcleo 10 - Costa Barros";
-            default: return codigo;
-        }
+        // Se o código for nulo, retorna vazio, senão retorna o próprio texto que veio do banco
+        return (codigo == null) ? "" : codigo;
     }
 
     private void addCelulaGrade(PdfPTable table, String label, String valor, Font fLabel, Font fDados) {
@@ -436,7 +424,6 @@ public class PdfService {
         table.addCell(cellOuter);
     }
 
-    // --- RODAPÉ MANTIDO (Y=135) ---
     private void adicionarRodapeComLogosFixos(PdfWriter writer, String endereco, boolean logoGrande) {
         try {
             PdfPTable tableFooter = new PdfPTable(1);
@@ -444,7 +431,6 @@ public class PdfService {
 
             adicionarLogosEEndereco(tableFooter, endereco, logoGrande);
 
-            // Mantido em 135 conforme solicitado (não abaixar endereço)
             tableFooter.writeSelectedRows(0, -1, 36, 135, writer.getDirectContent());
         } catch (Exception e) { e.printStackTrace(); }
     }
